@@ -91,7 +91,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-st.title("Simulador de Plano PHC Evolution")
+st.title("Simulador de Plano Cegid PHC Evolution")
 plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])
 
 # Tipos de gestão (caso Corporate)
@@ -206,5 +206,5 @@ if st.button("Calcular Plano Recomendado"):
 
     custo_estimado = preco_base + custo_extra_utilizadores
 
-    st.success(f"Plano PHC Evolution recomendado: {nome}")
-    st.markdown(f"**(Ainda a ser trabalhado)Previsão de Custo do Plano:** {custo_estimado:.2f} €")
+    st.success(f"Plano Cegid PHC Evolution recomendado: {nome}")
+    st.markdown(f"**(Ainda a ser trabalhado) Previsão de Custo do Plano:** {custo_estimado:.2f} €")

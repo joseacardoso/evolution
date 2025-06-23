@@ -12,7 +12,6 @@ st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
 
-        /* ========== Base global ========= */
         html, body, [class*="css"] {
             font-family: 'Segoe UI', sans-serif;
             background-color: #FFFFFF !important;
@@ -22,7 +21,6 @@ st.markdown("""
             background-color: #FFFFFF !important;
         }
 
-        /* ========== Texto padrão a preto ========= */
         body, h1, h2, h3, h4, p, label, span,
         .stCheckbox>div, .stCheckbox span, .stCheckbox label span,
         .stSelectbox label, .stNumberInput label,
@@ -33,7 +31,6 @@ st.markdown("""
             opacity: 1 !important;
         }
 
-        /* ========== Inputs e campos ========= */
         .stSelectbox div[data-baseweb],
         .stNumberInput input,
         .stSelectbox [data-baseweb="select"] > div {
@@ -41,7 +38,6 @@ st.markdown("""
             color: #000000 !important;
         }
 
-        /* ========== Botões de +/- ========= */
         .stNumberInput button {
             background-color: #FF5C35 !important;
             color: #FFFFFF !important;
@@ -49,7 +45,6 @@ st.markdown("""
             border-radius: 4px !important;
         }
 
-        /* ========== Botão principal ========= */
         .stButton>button {
             background-color: #FF5C35 !important;
             color: #FFFFFF !important;
@@ -72,19 +67,16 @@ st.markdown("""
             transition: background-color 0.3s ease;
         }
 
-        /* Força branco nos filhos do botão */
         .stButton button * {
             color: #FFFFFF !important;
         }
 
-        /* ========== Caixas de sucesso ========= */
         .stSuccess {
             background-color: #c9cfd3 !important;
             border-left: 6px solid #0046FE !important;
             color: #000000 !important;
         }
 
-        /* ========== Logotipo ========= */
         .logo-container {
             display: flex;
             justify-content: center;
@@ -93,18 +85,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Logo PHC original no topo com fundo branco
 st.markdown("""
     <div class="logo-container">
         <img src="https://phcsoftware.com/pt/wp-content/uploads/sites/3/2023/11/logo.svg" width="220" />
     </div>
 """, unsafe_allow_html=True)
 
-# Título e inputs principais
 st.title("Simulador de Plano PHC Evolution")
 plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])
 
-# Tipo de Gestão apenas para Corporate
+# Tipos de gestão (caso Corporate)
 tipo_gestao = None
 if plano_atual == "Corporate":
     tipo_gestao = st.selectbox("Tipo de Gestão", [
@@ -115,7 +105,7 @@ if plano_atual == "Corporate":
 
 utilizadores = st.number_input("Nº de Utilizadores de Gestão", min_value=0, step=1, format="%d")
 
-# Produtos por área com planos mínimos (apenas para lógica, não exibidos)
+# Produtos com planos mínimos
 produtos = {
     "Área Financeira / RH": {
         "Contabilidade": 3,
@@ -139,14 +129,16 @@ produtos = {
     }
 }
 
-# Interface de seleção por área (sem mostrar planos mínimos)
+# Captura das seleções
 selecoes = {}
 for area, modulos in produtos.items():
     st.markdown(f"### {area}")
     for modulo in modulos:
-        selecoes[modulo] = st.checkbox(modulo)
+        ativado = st.checkbox(f"{modulo}")
+        if ativado:
+            selecoes[modulo] = st.number_input(f"Nº Utilizadores - {modulo}", min_value=1, step=1, format="%d")
 
-# Cálculo do plano
+# Lógica do plano
 if st.button("Calcular Plano Recomendado"):
     planos = []
 
@@ -156,7 +148,6 @@ if st.button("Calcular Plano Recomendado"):
         planos.append(4)
     elif plano_atual == "Corporate":
         planos.append(1)
-        # Lógica extra para tipo de gestão
         if tipo_gestao == "Gestão Terceiros":
             planos.append(2)
         elif tipo_gestao == "Gestão Completo":
@@ -175,8 +166,9 @@ if st.button("Calcular Plano Recomendado"):
     else:
         planos.append(6)
 
-    for modulo, ativo in selecoes.items():
-        if ativo:
+    # Adiciona planos por produto selecionado
+    for modulo, num_utilizadores in selecoes.items():
+        if num_utilizadores > 0:
             plano_min = None
             for area in produtos.values():
                 if modulo in area:
@@ -196,5 +188,23 @@ if st.button("Calcular Plano Recomendado"):
         6: "Ultimate"
     }
 
-    nome = nome_planos.get(plano_final, f"Plano {plano_final}")
+    preco_planos = {
+        1: ("Essentials", 249, 1),
+        2: ("Standard", 399, 1),
+        3: ("Plus", 799, 2),
+        4: ("Advanced", 1499, 3),
+        5: ("Premium", 1999, 3),
+        6: ("Ultimate", 4299, 5)
+    }
+
+    nome, preco_base, incluidos = preco_planos[plano_final]
+
+    # Custo extra de utilizadores (se necessário)
+    custo_extra_utilizadores = 0
+    if utilizadores > incluidos:
+        custo_extra_utilizadores += (utilizadores - incluidos) * 50  # valor indicativo por utilizador extra
+
+    custo_estimado = preco_base + custo_extra_utilizadores
+
     st.success(f"Plano PHC Evolution recomendado: {nome}")
+    st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")

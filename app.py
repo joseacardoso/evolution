@@ -207,4 +207,4 @@ if st.button("Calcular Plano Recomendado"):
     custo_estimado = preco_base + custo_extra_utilizadores
 
     st.success(f"Plano PHC Evolution recomendado: {nome}")
-    st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
+    st.markdown(f"**(Ainda a ser trabalhado)Previsão de Custo do Plano:** {custo_estimado:.2f} €")

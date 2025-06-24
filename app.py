@@ -1,13 +1,9 @@
-# AVISO: Para executar corretamente esta aplicação Streamlit, use o seguinte comando no terminal:
-# streamlit run "C:\Projeto Python PSU\SQL\SimuladorEvolution.py"
-
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Força tema claro no Streamlit
 st.set_page_config(layout="centered")
 
-# Estilo personalizado com fundo branco e tudo a preto
+# fundo branco e tudo a preto
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
@@ -199,7 +195,7 @@ if st.button("Calcular Plano Recomendado"):
 
     nome, preco_base, incluidos = preco_planos[plano_final]
 
-    # Custo extra de utilizadores (se necessário)
+    # Custo extra de utilizadores (falta colocar a lógica dos escalões)
     custo_extra_utilizadores = 0
     if utilizadores > incluidos:
         custo_extra_utilizadores += (utilizadores - incluidos) * 50  # valor indicativo por utilizador extra

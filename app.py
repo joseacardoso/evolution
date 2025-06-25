@@ -4,6 +4,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import os
 
 # Força tema claro no Streamlit
 st.set_page_config(layout="centered")
@@ -25,7 +26,7 @@ st.markdown("""
         body, h1, h2, h3, h4, p, label, span,
         .stCheckbox>div, .stCheckbox span, .stCheckbox label span,
         .stSelectbox label, .stNumberInput label,
-        .stMarkdown span, .stMarkdown p,
+        .stMarkdown span, .stMarkdown p, .stMarkdown div,
         .css-1x8cf1d, .css-1v0mbdj span, .css-17eq0hr, .css-1r6slb0 {
             color: #000000 !important;
             font-weight: 500 !important;
@@ -179,19 +180,49 @@ if st.button("Calcular Plano Recomendado"):
 
     plano_final = max(planos) if planos else 1
 
-    df_precos = pd.read_csv("precos_planos.csv", sep=",")
+    csv_path = "preços_planos.csv"
+    df_precos = pd.read_csv(csv_path, sep=",")
     preco_planos = {
-        int(row["plano_id"]): (row["nome"], float(row["preco_base"]), int(row["utilizadores_incluidos"]))
+        int(row["plano_id"]): (
+            row["nome"],
+            float(row.get("preco_base", 0) or 0),
+            int(row.get("utilizadores_incluidos", 0) or 0),
+            float(row.get("preco_extra_ate_10", 0)) if str(row.get("preco_extra_ate_10", "")).strip() else 0,
+            float(row.get("preco_extra_ate_50", 0)) if str(row.get("preco_extra_ate_50", "")).strip() else 0,
+            float(row.get("preco_extra_acima_50", 0)) if str(row.get("preco_extra_acima_50", "")).strip() else 0
+        )
         for _, row in df_precos.iterrows()
     }
 
-    nome, preco_base, incluidos = preco_planos[plano_final]
+    nome, preco_base, incluidos, preco_ate_10, preco_ate_50, preco_mais_50 = preco_planos[plano_final]
 
     custo_extra_utilizadores = 0
-    if utilizadores > incluidos:
-        custo_extra_utilizadores += (utilizadores - incluidos) * 50
+    extras = max(0, utilizadores - incluidos)
+    grupo1 = grupo2 = grupo3 = 0
+
+    if extras > 0:
+        if plano_final == 6:
+            grupo1 = min(5, extras)
+            grupo2 = min(40, max(0, extras - 5))
+            grupo3 = max(0, extras - 45)
+            custo_extra_utilizadores = grupo1 * preco_ate_10 + grupo2 * preco_ate_50 + grupo3 * preco_mais_50
+        else:
+            grupo1 = extras
+            custo_extra_utilizadores = grupo1 * preco_ate_10
 
     custo_estimado = preco_base + custo_extra_utilizadores
 
     st.success(f"Plano PHC Evolution recomendado: {nome}")
     st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
+
+    detalhes = []
+    detalhes.append(f"Plano Base: {preco_base:.2f} €")
+    if grupo1 > 0:
+        detalhes.append(f"{grupo1} Utilizadores adicionais (até 10): {grupo1 * preco_ate_10:.2f} €")
+    if grupo2 > 0:
+        detalhes.append(f"{grupo2} Utilizadores adicionais (até 50): {grupo2 * preco_ate_50:.2f} €")
+    if grupo3 > 0:
+        detalhes.append(f"{grupo3} Utilizadores adicionais (mais de 50): {grupo3 * preco_mais_50:.2f} €")
+
+    for linha in detalhes:
+        st.markdown(f"<p style='color:#000000;'>• {linha}</p>", unsafe_allow_html=True)

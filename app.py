@@ -1,9 +1,14 @@
+# AVISO: Para executar corretamente esta aplicação Streamlit, use o seguinte comando no terminal:
+# streamlit run "C:\Projeto Python PSU\SQL\SimuladorEvolution.py"
+
 import streamlit as st
 import streamlit.components.v1 as components
+import pandas as pd
 
+# Força tema claro no Streamlit
 st.set_page_config(layout="centered")
 
-# fundo branco e tudo a preto
+# Estilo personalizado com fundo branco e tudo a preto
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
@@ -87,7 +92,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-st.title("Simulador de Plano Cegid PHC Evolution")
+st.title("Simulador de Plano PHC Evolution")
 plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])
 
 # Tipos de gestão (caso Corporate)
@@ -162,7 +167,6 @@ if st.button("Calcular Plano Recomendado"):
     else:
         planos.append(6)
 
-    # Adiciona planos por produto selecionado
     for modulo, num_utilizadores in selecoes.items():
         if num_utilizadores > 0:
             plano_min = None
@@ -175,32 +179,19 @@ if st.button("Calcular Plano Recomendado"):
 
     plano_final = max(planos) if planos else 1
 
-    nome_planos = {
-        1: "Essentials",
-        2: "Standard",
-        3: "Plus",
-        4: "Advanced",
-        5: "Premium",
-        6: "Ultimate"
-    }
-
+    df_precos = pd.read_csv("precos_planos.csv", sep=",")
     preco_planos = {
-        1: ("Essentials", 249, 1),
-        2: ("Standard", 399, 1),
-        3: ("Plus", 799, 2),
-        4: ("Advanced", 1499, 3),
-        5: ("Premium", 1999, 3),
-        6: ("Ultimate", 4299, 5)
+        int(row["plano_id"]): (row["nome"], float(row["preco_base"]), int(row["utilizadores_incluidos"]))
+        for _, row in df_precos.iterrows()
     }
 
     nome, preco_base, incluidos = preco_planos[plano_final]
 
-    # Custo extra de utilizadores (falta colocar a lógica dos escalões)
     custo_extra_utilizadores = 0
     if utilizadores > incluidos:
-        custo_extra_utilizadores += (utilizadores - incluidos) * 50  # valor indicativo por utilizador extra
+        custo_extra_utilizadores += (utilizadores - incluidos) * 50
 
     custo_estimado = preco_base + custo_extra_utilizadores
 
-    st.success(f"Plano Cegid PHC Evolution recomendado: {nome}")
-    st.markdown(f"**(Ainda a ser trabalhado) Previsão de Custo do Plano:** {custo_estimado:.2f} €")
+    st.success(f"Plano PHC Evolution recomendado: {nome}")
+    st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")

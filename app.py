@@ -180,7 +180,7 @@ if st.button("Calcular Plano Recomendado"):
 
     plano_final = max(planos) if planos else 1
 
-    csv_path = "preços_planos.csv"
+    csv_path = "precos_planos.csv"
     df_precos = pd.read_csv(csv_path, sep=",")
     preco_planos = {
         int(row["plano_id"]): (

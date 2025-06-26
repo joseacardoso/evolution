@@ -92,16 +92,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("Simulador de Plano PHC Evolution")
-plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])
-
-# Tipos de gestão (caso Corporate)
-tipo_gestao = None
-if plano_atual == "Corporate":
-    tipo_gestao = st.selectbox("Tipo de Gestão", [
-        "Gestão Clientes",
-        "Gestão Terceiros",
-        "Gestão Completo"
-    ])
 
 # Produtos com planos mínimos
 produtos = {
@@ -136,6 +126,8 @@ with st.expander("Importar tabela", expanded=False):
 
 import_data = {}
 utilizadores_importados = None
+plano_importado = 0  # 0=Corporate,1=Advanced,2=Enterprise
+
 if texto_tabela:
     try:
         df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
@@ -148,6 +140,13 @@ if texto_tabela:
         df_import = pd.DataFrame()
 
     if not df_import.empty:
+        if "Plano" in df_import.columns:
+            df_import["Plano"] = df_import["Plano"].astype(str).str.strip()
+            ordem = {"corporate": 0, "advanced": 1, "enterprise": 2}
+            for plano in df_import["Plano"]:
+                nivel = ordem.get(str(plano).lower(), 0)
+                if nivel > plano_importado:
+                    plano_importado = nivel
         df_import["Produto"] = df_import["Produto"].astype(str).str.strip()
         df_import["Quantidade"] = pd.to_numeric(df_import["Quantidade"], errors="coerce").fillna(0).astype(int)
         df_import = df_import.groupby("Produto", as_index=False)["Quantidade"].sum()
@@ -161,6 +160,21 @@ if texto_tabela:
                 import_data[modulo] = quantidade
             else:
                 st.warning(f"Módulo não reconhecido: {modulo}")
+
+plano_atual = st.selectbox(
+    "Plano Atual",
+    ["Corporate", "Advanced", "Enterprise"],
+    index=plano_importado,
+)
+
+# Tipos de gestão (caso Corporate)
+tipo_gestao = None
+if plano_atual == "Corporate":
+    tipo_gestao = st.selectbox(
+        "Tipo de Gestão",
+        ["Gestão Clientes", "Gestão Terceiros", "Gestão Completo"],
+    )
+
 
 # Campo para número de utilizadores de Gestão
 utilizadores = st.number_input(

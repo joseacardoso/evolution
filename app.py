@@ -1,6 +1,3 @@
-# AVISO: Para executar corretamente esta aplicação Streamlit, use o seguinte comando no terminal:
-# streamlit run "C:\Projeto Python PSU\SQL\SimuladorEvolution.py"
-
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd

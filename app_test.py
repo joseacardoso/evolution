@@ -138,10 +138,12 @@ texto_tabela = st.text_area(
 
 import_data = {}
 if texto_tabela:
-    try:
-        df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
-    except Exception:
+    df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
+    if df_import.shape[1] == 1 or "Produto" not in df_import.columns:
         df_import = pd.read_csv(StringIO(texto_tabela), sep="\t")
+    if "Produto" not in df_import.columns or "Quantidade" not in df_import.columns:
+        st.error("Colunas 'Produto' e 'Quantidade' não encontradas na tabela.")
+        df_import = pd.DataFrame()
 
     for _, row in df_import.iterrows():
         modulo = str(row["Produto"]).strip()

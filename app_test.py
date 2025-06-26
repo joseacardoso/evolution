@@ -103,8 +103,6 @@ if plano_atual == "Corporate":
         "Gestão Completo"
     ])
 
-utilizadores = st.number_input("Nº de Utilizadores de Gestão", min_value=0, step=1, format="%d")
-
 # Produtos com planos mínimos
 produtos = {
     "Área Financeira / RH": {
@@ -129,29 +127,49 @@ produtos = {
     }
 }
 
-# Área para colar tabela do Excel
-st.markdown("### Importar tabela")
-texto_tabela = st.text_area(
-    "Cole aqui a sua tabela em formato CSV ou separado por tabulações",
-    height=200,
-)
+# Área para colar tabela do Excel (opcional)
+with st.expander("Importar tabela", expanded=False):
+    texto_tabela = st.text_area(
+        "Cole aqui a sua tabela em formato CSV ou separado por tabulações",
+        height=200,
+    )
 
 import_data = {}
+utilizadores_importados = None
 if texto_tabela:
-    df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
-    if df_import.shape[1] == 1 or "Produto" not in df_import.columns:
-        df_import = pd.read_csv(StringIO(texto_tabela), sep="\t")
-    if "Produto" not in df_import.columns or "Quantidade" not in df_import.columns:
-        st.error("Colunas 'Produto' e 'Quantidade' não encontradas na tabela.")
+    try:
+        df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
+        if df_import.shape[1] == 1 or "Produto" not in df_import.columns:
+            df_import = pd.read_csv(StringIO(texto_tabela), sep="\t")
+        if "Produto" not in df_import.columns or "Quantidade" not in df_import.columns:
+            raise ValueError("missing cols")
+    except Exception:
+        st.error("Houve um erro na importação dos dados, por favor confirme se está correto")
         df_import = pd.DataFrame()
 
-    for _, row in df_import.iterrows():
-        modulo = str(row["Produto"]).strip()
-        quantidade = int(row["Quantidade"])
-        if modulo in [m for area in produtos.values() for m in area]:
-            import_data[modulo] = quantidade
-        else:
-            st.warning(f"Módulo não reconhecido: {modulo}")
+    if not df_import.empty:
+        df_import["Produto"] = df_import["Produto"].astype(str).str.strip()
+        df_import["Quantidade"] = pd.to_numeric(df_import["Quantidade"], errors="coerce").fillna(0).astype(int)
+        df_import = df_import.groupby("Produto", as_index=False)["Quantidade"].sum()
+
+        for _, row in df_import.iterrows():
+            modulo = row["Produto"]
+            quantidade = int(row["Quantidade"])
+            if modulo.lower() in ["gestão", "gestao"]:
+                utilizadores_importados = quantidade
+            elif modulo in [m for area in produtos.values() for m in area]:
+                import_data[modulo] = quantidade
+            else:
+                st.warning(f"Módulo não reconhecido: {modulo}")
+
+# Campo para número de utilizadores de Gestão
+utilizadores = st.number_input(
+    "Nº de Utilizadores de Gestão",
+    min_value=0,
+    step=1,
+    format="%d",
+    value=utilizadores_importados if utilizadores_importados is not None else 0,
+)
 
 # Captura das seleções
 selecoes = {}

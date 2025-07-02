@@ -79,7 +79,7 @@ st.markdown("""
         .logo-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+       margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -163,10 +163,17 @@ for area, modulos in produtos.items():
             ativado = st.checkbox(modulo)
             if modulo == "Bank Connector":
                 st.markdown(
-                    "Advanced inclui 1 banco base | Premium 3 | Ultimate 5"
+                    "O Plano Advanced inclui ligação a 1 Banco, o Plano Premium a 3 Bancos e o Ultimate a 5 Bancos, se precisar de mais bancos além dos incluídos, indique o nº necessário"
                 )
                 bank_connector_selecionado = ativado
-            if ativado:
+                if ativado:
+                    selecoes[modulo] = st.number_input(
+                        "Nº Bancos Adicionais",
+                        min_value=0,
+                        step=1,
+                        format="%d",
+                    )
+            elif ativado:
                 if info.get("per_user"):
                     selecoes[modulo] = st.number_input(
                         f"Nº Utilizadores - {modulo}", min_value=1, step=1, format="%d"
@@ -191,6 +198,7 @@ if st.button("Calcular Plano Recomendado"):
 
     csv_path = "precos_planos.csv"
     df_precos = pd.read_csv(csv_path, sep=",")
+    df_produtos = pd.read_csv("precos_produtos.csv", sep=",")
 
     limites = [
         (int(row["plano_id"]), row.get("limite_utilizadores"))
@@ -236,6 +244,14 @@ if st.button("Calcular Plano Recomendado"):
 
     nome, preco_base, incluidos, preco_ate_10, preco_ate_50, preco_mais_50 = preco_planos[plano_final]
 
+    preco_produtos = {
+        (row["produto"], int(row["plano_id"])): (
+            float(row.get("preco_base", 0) or 0),
+            float(row.get("preco_unidade", 0) or 0),
+        )
+        for _, row in df_produtos.iterrows()
+    }
+
     custo_extra_utilizadores = 0
     extras = max(0, utilizadores - incluidos)
     grupo1 = grupo2 = grupo3 = 0
@@ -250,7 +266,14 @@ if st.button("Calcular Plano Recomendado"):
             grupo1 = extras
             custo_extra_utilizadores = grupo1 * preco_ate_10
 
-    custo_estimado = preco_base + custo_extra_utilizadores
+    custo_modulos = 0
+    for modulo, quantidade in selecoes.items():
+        base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
+        if base or unidade:
+            custo = base + unidade * quantidade
+            custo_modulos += custo
+
+    custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
 
     st.success(f"Plano PHC Evolution recomendado: {nome}")
     st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
@@ -263,6 +286,11 @@ if st.button("Calcular Plano Recomendado"):
         detalhes.append(f"{grupo2} Utilizadores adicionais (até 50): {grupo2 * preco_ate_50:.2f} €")
     if grupo3 > 0:
         detalhes.append(f"{grupo3} Utilizadores adicionais (mais de 50): {grupo3 * preco_mais_50:.2f} €")
+
+    for modulo, quantidade in selecoes.items():
+        base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
+        if base or unidade:
+            detalhes.append(f"{modulo}: {(base + unidade * quantidade):.2f} €")
 
     for linha in detalhes:
         st.markdown(f"<p style='color:#000000;'>• {linha}</p>", unsafe_allow_html=True)

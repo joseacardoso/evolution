@@ -1,7 +1,7 @@
-plano_id,nome,preco_base,utilizadores_incluidos,preco_extra_ate_10,preco_extra_ate_50,preco_extra_acima_50
-1,Essentials,249,1,109,, 
-2,Standard,349,1,149,, 
-3,Plus,699,2,169,, 
-4,Advanced,1399,3,229,, 
-5,Premium,1999,3,329,329,
-6,Ultimate,3999,5,399,299,199
+plano_id,nome,preco_base,utilizadores_incluidos,limite_utilizadores,preco_extra_ate_10,preco_extra_ate_50,preco_extra_acima_50
+1,Essentials,249,1,1,109,,
+2,Standard,349,1,2,149,,
+3,Plus,699,2,5,169,,
+4,Advanced,1399,3,10,229,,
+5,Premium,1999,3,50,329,329,
+6,Ultimate,3999,5,,399,299,199

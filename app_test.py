@@ -71,7 +71,7 @@ st.markdown("""
             color: #FFFFFF !important;
         }
 
-       .stSuccess {
+           .stSuccess {
             background-color: #c9cfd3 !important;
             border-left: 6px solid #0046FE !important;
             color: #000000 !important;
@@ -158,13 +158,20 @@ if texto_tabela:
         df_import = pd.DataFrame()
 
     if not df_import.empty:
+        ordem = {"corporate": 0, "advanced": 1, "enterprise": 2}
         if "Plano" in df_import.columns:
             df_import["Plano"] = df_import["Plano"].astype(str).str.strip()
-            ordem = {"corporate": 0, "advanced": 1, "enterprise": 2}
             for plano in df_import["Plano"]:
                 nivel = ordem.get(str(plano).lower(), 0)
                 if nivel > plano_importado:
                     plano_importado = nivel
+        elif "Designação" in df_import.columns:
+            df_import["Designação"] = df_import["Designação"].astype(str)
+            for designacao in df_import["Designação"]:
+                texto = str(designacao).lower()
+                for nome, nivel in ordem.items():
+                    if nome in texto and nivel > plano_importado:
+                        plano_importado = nivel
 
         df_import["Produto"] = df_import["Produto"].astype(str).str.strip()
         df_import["Quantidade"] = (

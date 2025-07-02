@@ -71,7 +71,7 @@ st.markdown("""
             color: #FFFFFF !important;
         }
 
-        .stSuccess {
+     .stSuccess {
             background-color: #c9cfd3 !important;
             border-left: 6px solid #0046FE !important;
             color: #000000 !important;
@@ -95,26 +95,40 @@ st.title("Simulador de Plano PHC Evolution")
 
 # Produtos com planos mínimos
 produtos = {
-    "Área Financeira / RH": {
-        "Contabilidade": 3,
-        "Imobilizado": 3,
-        "Vencimentos": 3,
-        "Careers": 5,
-        "Colaborador": 4
+    "Core e Transversais": {
+        "Inventário Avançado": {"plano": 3, "per_user": False},
+        "Frota": {"plano": 3, "per_user": False},
+        "Logística": {"plano": 5, "per_user": False},
+        "Denúncias": {"plano": 5, "per_user": False},
+        "CRM": {"plano": 3, "per_user": True},
+        "BPM": {"plano": 5, "per_user": False},
+        "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
     },
-    "Áreas Verticais": {
-        "Suporte": 2,
-        "Clínica": 3,
-        "Formação": 3,
-        "Projeto": 3
+    "Área Financeira e Recursos Humanos": {
+        "Contabilidade": {"plano": 3, "per_user": True},
+        "Ativos": {"plano": 3, "per_user": True},
+        "Vencimento": {"plano": 3, "per_user": True},
+        "Colaborador": {"plano": 5, "per_user": True},
+        "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
+        "OKR": {"plano": 4, "per_user": True},
     },
     "Outros": {
-        "CRM": 3,
-        "RGPD": 3,
-        "Intrastat": 4,
-        "Denúncias": 5,
-        "Inventário Avançado (Lotes, Grelhas, Localizações, Ocupação, etc)": 3
-    }
+        "Suporte": {"plano": 2, "per_user": True},
+        "Ecommerce B2B": {"plano": 3, "per_user": False},
+    },
+    "Projeto": {
+        "Orçamentação": {"plano": 3, "per_user": True},
+        "Orçamentação + Medição": {"plano": 3, "per_user": True},
+        "Orçamentação + Medição + Controlo": {"plano": 3, "per_user": True},
+        "Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços": {
+            "plano": 3,
+            "per_user": True,
+        },
+    },
+    "Connected Services": {
+        "Bank Connector": {"plano": 4, "per_user": False},
+        "EDI Broker": {"plano": 1, "per_user": False},
+    },
 }
 
 # Área para colar tabela do Excel (opcional)
@@ -133,7 +147,9 @@ if texto_tabela:
         df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
         if df_import.shape[1] == 1 or "Produto" not in df_import.columns:
             df_import = pd.read_csv(StringIO(texto_tabela), sep="\t")
-        if "Produto" not in df_import.columns or "Quantidade" not in df_import.columns:
+        cols = [c.strip() for c in df_import.columns]
+        df_import.columns = cols
+        if "Produto" not in cols or "Quantidade" not in cols:
             raise ValueError("missing cols")
     except Exception:
         st.error("Houve um erro na importação dos dados, por favor confirme se está correto")
@@ -147,17 +163,37 @@ if texto_tabela:
                 nivel = ordem.get(str(plano).lower(), 0)
                 if nivel > plano_importado:
                     plano_importado = nivel
+
         df_import["Produto"] = df_import["Produto"].astype(str).str.strip()
-        df_import["Quantidade"] = pd.to_numeric(df_import["Quantidade"], errors="coerce").fillna(0).astype(int)
+        df_import["Quantidade"] = (
+            pd.to_numeric(df_import["Quantidade"], errors="coerce")
+            .fillna(0)
+            .astype(int)
+        )
+
+        if "Produto3" in df_import.columns:
+            df_import = df_import[~df_import["Produto3"].str.contains("Manufactor", case=False, na=False)]
+
         df_import = df_import.groupby("Produto", as_index=False)["Quantidade"].sum()
 
+        nome_map = {
+            "careers": "Careers c/ Recrutamento",
+            "imobilizado": "Ativos",
+            "vencimentos": "Vencimento",
+        }
+
+        modulos_validos = [m for area in produtos.values() for m in area]
+
         for _, row in df_import.iterrows():
-            modulo = row["Produto"]
+            modulo = row["Produto"].strip()
             quantidade = int(row["Quantidade"])
-            if modulo.lower() in ["gestão", "gestao"]:
+            modulo_lower = modulo.lower()
+            if modulo_lower in ["gestão", "gestao"]:
                 utilizadores_importados = quantidade
-            elif modulo in [m for area in produtos.values() for m in area]:
-                import_data[modulo] = quantidade
+                continue
+            modulo_nome = nome_map.get(modulo_lower, modulo)
+            if modulo_nome in modulos_validos:
+                import_data[modulo_nome] = quantidade
             else:
                 st.warning(f"Módulo não reconhecido: {modulo}")
 
@@ -187,20 +223,57 @@ utilizadores = st.number_input(
 
 # Captura das seleções
 selecoes = {}
+bank_connector_selecionado = False
 for area, modulos in produtos.items():
-    st.markdown(f"### {area}")
-    for modulo in modulos:
-        ativado = st.checkbox(f"{modulo}", value=modulo in import_data)
-        
-        if ativado:
-            quantidade_padrao = import_data.get(modulo, 1)
-            selecoes[modulo] = st.number_input(
-                f"Nº Utilizadores - {modulo}",
-                min_value=1,
-                step=1,
-                format="%d",
-                value=quantidade_padrao,
+    with st.expander(area, expanded=False):
+        if area == "Projeto":
+            opcoes = ["Nenhum"] + list(modulos.keys())
+            escolha = st.radio(
+                "Selecione o módulo de Projeto",
+                opcoes,
+                index=0,
             )
+            if escolha != "Nenhum":
+                info = modulos[escolha]
+                if info.get("per_user"):
+                    quantidade_padrao = import_data.get(escolha, 1)
+                    selecoes[escolha] = st.number_input(
+                        f"Nº Utilizadores - {escolha}",
+                        min_value=1,
+                        step=1,
+                        format="%d",
+                        value=quantidade_padrao,
+                    )
+                else:
+                    selecoes[escolha] = 1
+        else:
+            for modulo, info in modulos.items():
+                ativado = st.checkbox(modulo, value=modulo in import_data)
+                if modulo == "Bank Connector":
+                    st.markdown(
+                        "O Plano Advanced inclui ligação a 1 Banco, o Plano Premium a 3 Bancos e o Ultimate a 5 Bancos, se precisar de mais bancos além dos incluídos, indique o nº necessário"
+                    )
+                    bank_connector_selecionado = ativado
+                    if ativado:
+                        selecoes[modulo] = st.number_input(
+                            "Nº Bancos Adicionais",
+                            min_value=0,
+                            step=1,
+                            format="%d",
+                            value=import_data.get(modulo, 0),
+                        )
+                elif ativado:
+                    if info.get("per_user"):
+                        quantidade_padrao = import_data.get(modulo, 1)
+                        selecoes[modulo] = st.number_input(
+                            f"Nº Utilizadores - {modulo}",
+                            min_value=1,
+                            step=1,
+                            format="%d",
+                            value=quantidade_padrao,
+                        )
+                    else:
+                        selecoes[modulo] = 1
 
 # Lógica do plano
 if st.button("Calcular Plano Recomendado"):
@@ -219,6 +292,7 @@ if st.button("Calcular Plano Recomendado"):
 
     csv_path = "precos_planos.csv"
     df_precos = pd.read_csv(csv_path, sep=",")
+    df_produtos = pd.read_csv("precos_produtos.csv", sep=",")
 
     limites = [
         (int(row["plano_id"]), row.get("limite_utilizadores"))
@@ -237,15 +311,17 @@ if st.button("Calcular Plano Recomendado"):
 
     planos.append(plano_utilizadores)
 
-    for modulo, num_utilizadores in selecoes.items():
-        if num_utilizadores > 0:
-            plano_min = None
-            for area in produtos.values():
-                if modulo in area:
-                    plano_min = area[modulo]
-                    break
-            if plano_min:
-                planos.append(plano_min)
+    for modulo in selecoes:
+        plano_min = None
+        for area in produtos.values():
+            if modulo in area:
+                info = area[modulo]
+                plano_min = info.get("plano")
+                break
+        if plano_min:
+            planos.append(plano_min)
+    if "Colaborador" in selecoes and "Vencimento" not in selecoes:
+        st.warning("O módulo Colaborador requer Vencimento")
 
     plano_final = max(planos) if planos else 1
     preco_planos = {
@@ -262,6 +338,14 @@ if st.button("Calcular Plano Recomendado"):
 
     nome, preco_base, incluidos, preco_ate_10, preco_ate_50, preco_mais_50 = preco_planos[plano_final]
 
+    preco_produtos = {
+        (row["produto"], int(row["plano_id"])): (
+            float(row.get("preco_base", 0) or 0),
+            float(row.get("preco_unidade", 0) or 0),
+        )
+        for _, row in df_produtos.iterrows()
+    }
+
     custo_extra_utilizadores = 0
     extras = max(0, utilizadores - incluidos)
     grupo1 = grupo2 = grupo3 = 0
@@ -273,3 +357,69 @@ if st.button("Calcular Plano Recomendado"):
             grupo3 = max(0, extras - 45)
             custo_extra_utilizadores = grupo1 * preco_ate_10 + grupo2 * preco_ate_50 + grupo3 * preco_mais_50
         else:
+            grupo1 = extras
+            custo_extra_utilizadores = grupo1 * preco_ate_10
+
+    custo_modulos = 0
+    modulos_detalhe = {}
+    for modulo, quantidade in selecoes.items():
+        if modulo == "Ponto de Venda (POS/Restauração)":
+            preco_primeiro = preco_produtos.get(("POS (1º)", plano_final), (0, 0))[0]
+            preco_2_10 = preco_produtos.get(("POS (2 a 10)", plano_final), (0, 0))[1]
+            preco_maior_10 = preco_produtos.get(("POS (>10)", plano_final), (0, 0))[1]
+
+            if quantidade > 0:
+                restantes = quantidade - 1
+                ate_10 = min(restantes, 9)
+                acima_10 = max(restantes - 9, 0)
+                custo_base = preco_primeiro
+                custo_extra = ate_10 * preco_2_10 + acima_10 * preco_maior_10
+            else:
+                custo_base = 0
+                custo_extra = 0
+        else:
+            base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
+            custo_base = base
+            custo_extra = unidade * quantidade if unidade else 0
+
+        if custo_base or custo_extra:
+            custo_total = custo_base + custo_extra
+            custo_modulos += custo_total
+            modulos_detalhe[modulo] = (custo_base, custo_extra)
+
+    custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
+
+    st.success(f"Plano PHC Evolution recomendado: {nome}")
+    st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
+
+    detalhes = []
+    detalhes.append(f"Preço do Plano Base: {preco_base:.2f} €")
+    if custo_extra_utilizadores > 0:
+        detalhes.append(
+            f"Preço dos Full Users adicionais: {custo_extra_utilizadores:.2f} €"
+        )
+
+    for modulo, custos in modulos_detalhe.items():
+        custo_base, custo_extra = custos
+        detalhes.append(f"{modulo}: {custo_base:.2f} €")
+        if custo_extra > 0:
+            detalhes.append(
+                f"{modulo} (Utilizadores Adicionais): {custo_extra:.2f} €"
+            )
+
+    for linha in detalhes:
+        st.markdown(f"<p style='color:#000000;'>• {linha}</p>", unsafe_allow_html=True)
+
+    if bank_connector_selecionado:
+        bancos_base = 0
+        if plano_final == 4:
+            bancos_base = 1
+        elif plano_final == 5:
+            bancos_base = 3
+        elif plano_final == 6:
+            bancos_base = 5
+        if bancos_base:
+            st.markdown(
+                f"<p style='color:#000000;'>Bank Connector inclui {bancos_base} banco(s) base.</p>",
+                unsafe_allow_html=True,
+            )

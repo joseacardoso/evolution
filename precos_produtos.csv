@@ -1,9 +1,136 @@
 produto,plano_id,preco_base,preco_unidade
+Inventário Avançado,1,0,0
+Inventário Avançado,2,0,0
+Inventário Avançado,3,250,0
+Inventário Avançado,4,500,0
+Inventário Avançado,5,0,0
+Inventário Avançado,6,0,0
+Frota,1,0,0
+Frota,2,0,0
+Frota,3,500,0
+Frota,4,1000,0
+Frota,5,1000,0
+Frota,6,2250,0
+Logística,1,0,0
+Logística,2,0,0
+Logística,3,0,0
+Logística,4,0,0
+Logística,5,0,0
+Logística,6,0,0
+Denúncias,1,0,0
+Denúncias,2,0,0
+Denúncias,3,0,0
+Denúncias,4,0,0
+Denúncias,5,300,0
+Denúncias,6,0,0
+CRM,1,0,0
+CRM,2,0,0
+CRM,3,250,35
+CRM,4,500,70
+CRM,5,0,70
+CRM,6,0,125
+BPM,1,0,0
+BPM,2,0,0
+BPM,3,0,0
+BPM,4,0,0
+BPM,5,300,0
+BPM,6,0,0
+POS (1º),1,179,0
+POS (1º),2,229,0
+POS (1º),3,229,0
+POS (1º),4,289,0
+POS (1º),5,289,0
+POS (1º),6,369,0
+POS (2 a 10),1,0,0
+POS (2 a 10),2,0,119
+POS (2 a 10),3,0,119
+POS (2 a 10),4,0,149
+POS (2 a 10),5,0,149
+POS (2 a 10),6,0,189
+POS (>10),1,0,0
+POS (>10),2,0,0
+POS (>10),3,0,0
+POS (>10),4,0,0
+POS (>10),5,0,89
+POS (>10),6,0,109
+Contabilidade,1,0,0
+Contabilidade,2,0,0
+Contabilidade,3,599,109
+Contabilidade,4,899,169
+Contabilidade,5,899,169
+Contabilidade,6,1499,279
+Ativos,1,0,0
+Ativos,2,0,0
+Ativos,3,419,79
+Ativos,4,629,119
+Ativos,5,629,119
+Ativos,6,1049,199
+Vencimento,1,0,0
+Vencimento,2,0,0
+Vencimento,3,599,289
+Vencimento,4,899,429
+Vencimento,5,899,429
+Vencimento,6,1499,779
+Colaborador,1,0,0
+Colaborador,2,0,0
+Colaborador,3,0,0
+Colaborador,4,0,0
+Colaborador,5,0,18
+Colaborador,6,0,24
+Careers c/ Recrutamento,1,0,0
+Careers c/ Recrutamento,2,0,0
+Careers c/ Recrutamento,3,0,0
+Careers c/ Recrutamento,4,0,0
+Careers c/ Recrutamento,5,599,18
+Careers c/ Recrutamento,6,999,24
+OKR,1,0,0
+OKR,2,0,0
+OKR,3,0,0
+OKR,4,0,6
+OKR,5,0,6
+OKR,6,0,9
+Suporte,1,0,0
 Suporte,2,499,69
 Suporte,3,499,69
 Suporte,4,999,139
 Suporte,5,999,139
 Suporte,6,1999,279
+Ecommerce B2B,1,0,0
+Ecommerce B2B,2,0,0
+Ecommerce B2B,3,399,0
+Ecommerce B2B,4,699,0
+Ecommerce B2B,5,699,0
+Ecommerce B2B,6,1099,0
+Orçamentação,1,0,0
+Orçamentação,2,0,0
+Orçamentação,3,599,89
+Orçamentação,4,899,129
+Orçamentação,5,899,129
+Orçamentação,6,1199,169
+Orçamentação + Medição,1,0,0
+Orçamentação + Medição,2,0,0
+Orçamentação + Medição,3,839,119
+Orçamentação + Medição,4,1249,169
+Orçamentação + Medição,5,1249,169
+Orçamentação + Medição,6,1679,234
+Orçamentação + Medição + Controlo,1,0,0
+Orçamentação + Medição + Controlo,2,0,0
+Orçamentação + Medição + Controlo,3,999,139
+Orçamentação + Medição + Controlo,4,1499,209
+Orçamentação + Medição + Controlo,5,1499,209
+Orçamentação + Medição + Controlo,6,1999,279
+Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,1,0,0
+Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,2,0,0
+Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,3,1139,159
+Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,4,1699,239
+Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,5,1699,239
+Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,6,2299,319
 Bank Connector,4,0,0
 Bank Connector,5,0,0
 Bank Connector,6,0,0
+EDI Broker,1,0,0
+EDI Broker,2,0,0
+EDI Broker,3,0,0
+EDI Broker,4,0,0
+EDI Broker,5,0,0
+EDI Broker,6,0,0

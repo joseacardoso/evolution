@@ -147,7 +147,9 @@ if texto_tabela:
         df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
         if df_import.shape[1] == 1 or "Produto" not in df_import.columns:
             df_import = pd.read_csv(StringIO(texto_tabela), sep="\t")
-        if "Produto" not in df_import.columns or "Quantidade" not in df_import.columns:
+        cols = [c.strip() for c in df_import.columns]
+        df_import.columns = cols
+        if "Produto" not in cols or "Quantidade" not in cols:
             raise ValueError("missing cols")
     except Exception:
         st.error("Houve um erro na importação dos dados, por favor confirme se está correto")
@@ -161,17 +163,37 @@ if texto_tabela:
                 nivel = ordem.get(str(plano).lower(), 0)
                 if nivel > plano_importado:
                     plano_importado = nivel
+
         df_import["Produto"] = df_import["Produto"].astype(str).str.strip()
-        df_import["Quantidade"] = pd.to_numeric(df_import["Quantidade"], errors="coerce").fillna(0).astype(int)
+        df_import["Quantidade"] = (
+            pd.to_numeric(df_import["Quantidade"], errors="coerce")
+            .fillna(0)
+            .astype(int)
+        )
+
+        if "Produto3" in df_import.columns:
+            df_import = df_import[~df_import["Produto3"].str.contains("Manufactor", case=False, na=False)]
+
         df_import = df_import.groupby("Produto", as_index=False)["Quantidade"].sum()
 
+        nome_map = {
+            "careers": "Careers c/ Recrutamento",
+            "imobilizado": "Ativos",
+            "vencimentos": "Vencimento",
+        }
+
+        modulos_validos = [m for area in produtos.values() for m in area]
+
         for _, row in df_import.iterrows():
-            modulo = row["Produto"]
+            modulo = row["Produto"].strip()
             quantidade = int(row["Quantidade"])
-            if modulo.lower() in ["gestão", "gestao"]:
+            modulo_lower = modulo.lower()
+            if modulo_lower in ["gestão", "gestao"]:
                 utilizadores_importados = quantidade
-            elif modulo in [m for area in produtos.values() for m in area]:
-                import_data[modulo] = quantidade
+                continue
+            modulo_nome = nome_map.get(modulo_lower, modulo)
+            if modulo_nome in modulos_validos:
+                import_data[modulo_nome] = quantidade
             else:
                 st.warning(f"Módulo não reconhecido: {modulo}")
 

@@ -79,7 +79,7 @@ st.markdown("""
         .logo-container {
             display: flex;
             justify-content: center;
-                        margin-bottom: 20px;
+            margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -302,21 +302,24 @@ if st.button("Calcular Plano Recomendado"):
     custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
 
     st.success(f"Plano PHC Evolution recomendado: {nome}")
-    st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
+    def format_euro(valor: float) -> str:
+        return f"{int(round(valor)):,}".replace(",", ".") + " €"
+
+    st.markdown(f"**Previsão de Custo do Plano:** {format_euro(custo_estimado)}")
 
     detalhes = []
-    detalhes.append(f"Preço do Plano Base: {preco_base:.2f} €")
+    detalhes.append(f"Preço do Plano Base: {format_euro(preco_base)}")
     if custo_extra_utilizadores > 0:
         detalhes.append(
-            f"Preço dos Full Users adicionais: {custo_extra_utilizadores:.2f} €"
+            f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Preço dos Full Users adicionais: {format_euro(custo_extra_utilizadores)}"
         )
 
     for modulo, custos in modulos_detalhe.items():
         custo_base, custo_extra = custos
-        detalhes.append(f"{modulo}: {custo_base:.2f} €")
+        detalhes.append(f"{modulo}: {format_euro(custo_base)}")
         if custo_extra > 0:
             detalhes.append(
-                f"{modulo} (Utilizadores Adicionais): {custo_extra:.2f} €"
+                f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{modulo} (Utilizadores Adicionais): {format_euro(custo_extra)}"
             )
 
     for linha in detalhes:

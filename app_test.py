@@ -71,7 +71,7 @@ st.markdown("""
             color: #FFFFFF !important;
         }
 
-       .stSuccess {
+            .stSuccess {
             background-color: #c9cfd3 !important;
             border-left: 6px solid #0046FE !important;
             color: #000000 !important;
@@ -409,22 +409,27 @@ if st.button("Calcular Plano Recomendado"):
     st.markdown(f"**Previsão de Custo do Plano:** {format_euro(custo_estimado)}")
 
     detalhes = []
-    detalhes.append(f"Preço do Plano Base: {format_euro(preco_base)}")
+    detalhes.append(("Preço do Plano Base", format_euro(preco_base), False))
     if custo_extra_utilizadores > 0:
         detalhes.append(
-            f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Preço dos Full Users adicionais: {format_euro(custo_extra_utilizadores)}"
+            (f"Preço dos {extras} Full Users adicionais", format_euro(custo_extra_utilizadores), True)
         )
 
     for modulo, custos in modulos_detalhe.items():
         custo_base, custo_extra = custos
-        detalhes.append(f"{modulo}: {format_euro(custo_base)}")
+        detalhes.append((modulo, format_euro(custo_base), False))
         if custo_extra > 0:
             detalhes.append(
-                f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{modulo} (Utilizadores Adicionais): {format_euro(custo_extra)}"
+                (f"{modulo} (Utilizadores Adicionais)", format_euro(custo_extra), True)
             )
 
-    for linha in detalhes:
-        st.markdown(f"<p style='color:#000000;'>• {linha}</p>", unsafe_allow_html=True)
+    for texto, valor, indent in detalhes:
+        bullet = "" if indent else "• "
+        prefix = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" if indent else ""
+        st.markdown(
+            f"<p style='color:#FF5C35;'>{bullet}{prefix}{texto}: {valor}</p>",
+            unsafe_allow_html=True,
+        )
 
     if bank_connector_selecionado:
         bancos_base = 0

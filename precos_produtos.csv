@@ -1,0 +1,9 @@
+produto,plano_id,preco_base,preco_unidade
+Suporte,2,499,69
+Suporte,3,499,69
+Suporte,4,999,139
+Suporte,5,999,139
+Suporte,6,1999,279
+Bank Connector,4,0,0
+Bank Connector,5,0,0
+Bank Connector,6,0,0

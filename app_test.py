@@ -216,18 +216,25 @@ if st.button("Calcular Plano Recomendado"):
         elif tipo_gestao == "Gestão Completo":
             planos.append(3)
 
-    if utilizadores <= 1:
-        planos.append(1)
-    elif utilizadores <= 2:
-        planos.append(2)
-    elif utilizadores <= 5:
-        planos.append(3)
-    elif utilizadores <= 10:
-        planos.append(4)
-    elif utilizadores <= 50:
-        planos.append(5)
-    else:
-        planos.append(6)
+    csv_path = "precos_planos.csv"
+    df_precos = pd.read_csv(csv_path, sep=",")
+
+    limites = [
+        (int(row["plano_id"]), row.get("limite_utilizadores"))
+        for _, row in df_precos.iterrows()
+    ]
+    limites.sort(key=lambda x: x[0])
+
+    plano_utilizadores = None
+    for pid, limite in limites:
+        if pd.notna(limite) and str(limite).strip() != "":
+            if utilizadores <= int(limite):
+                plano_utilizadores = pid
+                break
+    if plano_utilizadores is None:
+        plano_utilizadores = max(pid for pid, _ in limites)
+
+    planos.append(plano_utilizadores)
 
     for modulo, num_utilizadores in selecoes.items():
         if num_utilizadores > 0:
@@ -240,9 +247,6 @@ if st.button("Calcular Plano Recomendado"):
                 planos.append(plano_min)
 
     plano_final = max(planos) if planos else 1
-
-    csv_path = "precos_planos.csv"
-    df_precos = pd.read_csv(csv_path, sep=",")
     preco_planos = {
         int(row["plano_id"]): (
             row["nome"],

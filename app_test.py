@@ -71,7 +71,7 @@ st.markdown("""
             color: #FFFFFF !important;
         }
 
-            .stSuccess {
+       .stSuccess {
             background-color: #c9cfd3 !important;
             border-left: 6px solid #0046FE !important;
             color: #000000 !important;
@@ -176,7 +176,29 @@ if texto_tabela:
         if "Produto3" in df_import.columns:
             df_import = df_import[~df_import["Produto3"].str.contains("Manufactor", case=False, na=False)]
 
-        df_import = df_import.groupby("Produto", as_index=False)["Quantidade"].sum()
+        if "Designação" in df_import.columns:
+            df_import["Designação"] = df_import["Designação"].astype(str)
+        else:
+            df_import["Designação"] = ""
+        tot_por_produto = {}
+        rede_por_produto = {}
+
+        for _, row in df_import.iterrows():
+            modulo_raw = str(row["Produto"]).strip()
+            quantidade = int(row["Quantidade"])
+            designacao = str(row.get("Designação", "")).lower()
+
+            tot_por_produto[modulo_raw] = tot_por_produto.get(modulo_raw, 0) + quantidade
+            if "rede" in designacao:
+                rede_por_produto[modulo_raw] = rede_por_produto.get(modulo_raw, 0) + quantidade
+
+        df_import = pd.DataFrame(
+            {
+                "Produto": list(tot_por_produto.keys()),
+                "Quantidade": [tot_por_produto[p] for p in tot_por_produto],
+                "Rede": [rede_por_produto.get(p, 0) for p in tot_por_produto],
+            }
+        )
 
         nome_map = {
             "careers": "Careers c/ Recrutamento",
@@ -193,10 +215,12 @@ if texto_tabela:
 
         for _, row in df_import.iterrows():
             modulo = row["Produto"].strip()
-            quantidade = int(row["Quantidade"])
+            total_mod = int(row["Quantidade"])
+            rede_mod = int(row.get("Rede", 0))
+            quantidade = max(0, total_mod - rede_mod)
             modulo_lower = modulo.lower()
             if modulo_lower in ["gest\u00e3o", "gestao"]:
-                utilizadores_importados = quantidade
+                utilizadores_importados = total_mod
                 continue
             if modulo_lower in modulos_ignorados:
                 continue

@@ -104,38 +104,88 @@ if plano_atual == "Corporate":
 
 utilizadores = st.number_input("Nº de Utilizadores de Gestão", min_value=0, step=1, format="%d")
 
-# Produtos com planos mínimos
+# Nova estrutura de produtos
 produtos = {
-    "Área Financeira / RH": {
-        "Contabilidade": 3,
-        "Imobilizado": 3,
-        "Vencimentos": 3,
-        "Careers": 5,
-        "Colaborador": 4
+    "Core e Transversais": {
+        "Inventário Avançado": {"plano": 3, "per_user": False},
+        "Frota": {"plano": 3, "per_user": False},
+        "Logística": {"plano": 5, "per_user": False},
+        "Denúncias": {"plano": 5, "per_user": False},
+        "CRM": {"plano": 3, "per_user": True},
+        "BPM": {"plano": 5, "per_user": False},
+        "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
     },
-    "Áreas Verticais": {
-        "Suporte": 2,
-        "Clínica": 3,
-        "Formação": 3,
-        "Projeto": 3
+    "Área Financeira e Recursos Humanos": {
+        "Contabilidade": {"plano": 3, "per_user": True},
+        "Ativos": {"plano": 3, "per_user": True},
+        "Vencimento": {"plano": 3, "per_user": True},
+        "Colaborador": {"plano": 5, "per_user": True},
+        "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
+        "OKR": {"plano": 4, "per_user": True},
     },
     "Outros": {
-        "CRM": 3,
-        "RGPD": 3,
-        "Intrastat": 4,
-        "Denúncias": 5,
-        "Inventário Avançado (Lotes, Grelhas, Localizações, Ocupação, etc)": 3
-    }
+        "Suporte": {"plano": 2, "per_user": True},
+        "Ecommerce B2B": {"plano": 3, "per_user": False},
+    },
+    "Projeto": {
+        "Orçamentação": {"plano": 3, "per_user": True},
+        "Orçamentação + Medição": {"plano": 3, "per_user": True},
+        "Orçamentação + Medição + Controlo": {"plano": 3, "per_user": True},
+        "Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços": {
+            "plano": 3,
+            "per_user": True,
+        },
+    },
+    "Connected Services": {
+        "Bank Connector": {"plano": 4, "per_user": False},
+        "EDI Broker": {"plano": 1, "per_user": False},
+    },
 }
 
 # Captura das seleções
 selecoes = {}
+bank_connector_selecionado = False
 for area, modulos in produtos.items():
-    st.markdown(f"### {area}")
-    for modulo in modulos:
-        ativado = st.checkbox(f"{modulo}")
-        if ativado:
-            selecoes[modulo] = st.number_input(f"Nº Utilizadores - {modulo}", min_value=1, step=1, format="%d")
+    with st.expander(area, expanded=False):
+        if area == "Projeto":
+            opcoes = ["Nenhum"] + list(modulos.keys())
+            escolha = st.radio("Selecione o módulo de Projeto", opcoes, index=0)
+            if escolha != "Nenhum":
+                info = modulos[escolha]
+                if info.get("per_user"):
+                    selecoes[escolha] = st.number_input(
+                        f"Nº Utilizadores - {escolha}",
+                        min_value=1,
+                        step=1,
+                        format="%d",
+                    )
+                else:
+                    selecoes[escolha] = 1
+        else:
+            for modulo, info in modulos.items():
+                ativado = st.checkbox(modulo)
+                if modulo == "Bank Connector":
+                    st.markdown(
+                        "O Plano Advanced inclui ligação a 1 Banco, o Plano Premium a 3 Bancos e o Ultimate a 5 Bancos, se precisar de mais bancos além dos incluídos, indique o nº necessário"
+                    )
+                    bank_connector_selecionado = ativado
+                    if ativado:
+                        selecoes[modulo] = st.number_input(
+                            "Nº Bancos Adicionais",
+                            min_value=0,
+                            step=1,
+                            format="%d",
+                        )
+                elif ativado:
+                    if info.get("per_user"):
+                        selecoes[modulo] = st.number_input(
+                            f"Nº Utilizadores - {modulo}",
+                            min_value=1,
+                            step=1,
+                            format="%d",
+                        )
+                    else:
+                        selecoes[modulo] = 1
 
 # Lógica do plano
 if st.button("Calcular Plano Recomendado"):
@@ -152,33 +202,40 @@ if st.button("Calcular Plano Recomendado"):
         elif tipo_gestao == "Gestão Completo":
             planos.append(3)
 
-    if utilizadores <= 1:
-        planos.append(1)
-    elif utilizadores <= 2:
-        planos.append(2)
-    elif utilizadores <= 5:
-        planos.append(3)
-    elif utilizadores <= 10:
-        planos.append(4)
-    elif utilizadores <= 50:
-        planos.append(5)
-    else:
-        planos.append(6)
-
-    for modulo, num_utilizadores in selecoes.items():
-        if num_utilizadores > 0:
-            plano_min = None
-            for area in produtos.values():
-                if modulo in area:
-                    plano_min = area[modulo]
-                    break
-            if plano_min:
-                planos.append(plano_min)
-
-    plano_final = max(planos) if planos else 1
-
     csv_path = "precos_planos.csv"
     df_precos = pd.read_csv(csv_path, sep=",")
+    df_produtos = pd.read_csv("precos_produtos.csv", sep=",")
+
+    limites = [
+        (int(row["plano_id"]), row.get("limite_utilizadores"))
+        for _, row in df_precos.iterrows()
+    ]
+    limites.sort(key=lambda x: x[0])
+
+    plano_utilizadores = None
+    for pid, limite in limites:
+        if pd.notna(limite) and str(limite).strip() != "":
+            if utilizadores <= int(limite):
+                plano_utilizadores = pid
+                break
+    if plano_utilizadores is None:
+        plano_utilizadores = max(pid for pid, _ in limites)
+
+    planos.append(plano_utilizadores)
+
+    for modulo in selecoes:
+        plano_min = None
+        for area in produtos.values():
+            if modulo in area:
+                info = area[modulo]
+                plano_min = info.get("plano")
+                break
+        if plano_min:
+            planos.append(plano_min)
+    if "Colaborador" in selecoes and "Vencimento" not in selecoes:
+        st.warning("O módulo Colaborador requer Vencimento")
+
+    plano_final = max(planos) if planos else 1
     preco_planos = {
         int(row["plano_id"]): (
             row["nome"],
@@ -192,6 +249,14 @@ if st.button("Calcular Plano Recomendado"):
     }
 
     nome, preco_base, incluidos, preco_ate_10, preco_ate_50, preco_mais_50 = preco_planos[plano_final]
+
+    preco_produtos = {
+        (row["produto"], int(row["plano_id"])): (
+            float(row.get("preco_base", 0) or 0),
+            float(row.get("preco_unidade", 0) or 0),
+        )
+        for _, row in df_produtos.iterrows()
+    }
 
     custo_extra_utilizadores = 0
     extras = max(0, utilizadores - incluidos)
@@ -207,19 +272,74 @@ if st.button("Calcular Plano Recomendado"):
             grupo1 = extras
             custo_extra_utilizadores = grupo1 * preco_ate_10
 
-    custo_estimado = preco_base + custo_extra_utilizadores
+    custo_modulos = 0
+    modulos_detalhe = {}
+    for modulo, quantidade in selecoes.items():
+        if modulo == "Ponto de Venda (POS/Restauração)":
+            preco_primeiro = preco_produtos.get(("POS (1º)", plano_final), (0, 0))[0]
+            preco_2_10 = preco_produtos.get(("POS (2 a 10)", plano_final), (0, 0))[1]
+            preco_maior_10 = preco_produtos.get(("POS (>10)", plano_final), (0, 0))[1]
+
+            if quantidade > 0:
+                restantes = quantidade - 1
+                ate_10 = min(restantes, 9)
+                acima_10 = max(restantes - 9, 0)
+                custo_base = preco_primeiro
+                custo_extra = ate_10 * preco_2_10 + acima_10 * preco_maior_10
+            else:
+                custo_base = 0
+                custo_extra = 0
+        else:
+            base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
+            custo_base = base
+            custo_extra = unidade * quantidade if unidade else 0
+
+        if custo_base or custo_extra:
+            custo_total = custo_base + custo_extra
+            custo_modulos += custo_total
+            modulos_detalhe[modulo] = (custo_base, custo_extra)
+
+    custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
 
     st.success(f"Plano PHC Evolution recomendado: {nome}")
-    st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
+    def format_euro(valor: float) -> str:
+        return f"{int(round(valor)):,}".replace(",", ".") + " €"
+
+    st.markdown(f"**Previsão de Custo do Plano:** {format_euro(custo_estimado)}")
 
     detalhes = []
-    detalhes.append(f"Plano Base: {preco_base:.2f} €")
-    if grupo1 > 0:
-        detalhes.append(f"{grupo1} Utilizadores adicionais (até 10): {grupo1 * preco_ate_10:.2f} €")
-    if grupo2 > 0:
-        detalhes.append(f"{grupo2} Utilizadores adicionais (até 50): {grupo2 * preco_ate_50:.2f} €")
-    if grupo3 > 0:
-        detalhes.append(f"{grupo3} Utilizadores adicionais (mais de 50): {grupo3 * preco_mais_50:.2f} €")
+    detalhes.append(("Preço do Plano Base", format_euro(preco_base), False))
+    if custo_extra_utilizadores > 0:
+        detalhes.append(
+            (f"Preço dos {extras} Full Users adicionais", format_euro(custo_extra_utilizadores), True)
+        )
 
-    for linha in detalhes:
-        st.markdown(f"<p style='color:#000000;'>• {linha}</p>", unsafe_allow_html=True)
+    for modulo, custos in modulos_detalhe.items():
+        custo_base, custo_extra = custos
+        detalhes.append((modulo, format_euro(custo_base), False))
+        if custo_extra > 0:
+            detalhes.append(
+                (f"{modulo} (Utilizadores Adicionais)", format_euro(custo_extra), True)
+            )
+
+    for texto, valor, indent in detalhes:
+        bullet = "" if indent else "• "
+        prefix = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" if indent else ""
+        st.markdown(
+            f"<p style='color:#FF5C35;'>{bullet}{prefix}{texto}: {valor}</p>",
+            unsafe_allow_html=True,
+        )
+
+    if bank_connector_selecionado:
+        bancos_base = 0
+        if plano_final == 4:
+            bancos_base = 1
+        elif plano_final == 5:
+            bancos_base = 3
+        elif plano_final == 6:
+            bancos_base = 5
+        if bancos_base:
+            st.markdown(
+                f"<p style='color:#000000;'>Bank Connector inclui {bancos_base} banco(s) base.</p>",
+                unsafe_allow_html=True,
+            )

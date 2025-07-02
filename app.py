@@ -79,7 +79,7 @@ st.markdown("""
         .logo-container {
             display: flex;
             justify-content: center;
-           margin-bottom: 20px;
+                        margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -109,19 +109,19 @@ produtos = {
     "Core e Transversais": {
         "Inventário Avançado": {"plano": 3, "per_user": False},
         "Frota": {"plano": 3, "per_user": False},
-        "Logística": {"plano": 3, "per_user": False},
+        "Logística": {"plano": 5, "per_user": False},
         "Denúncias": {"plano": 5, "per_user": False},
         "CRM": {"plano": 3, "per_user": True},
-        "BPM": {"plano": 3, "per_user": False},
-        "Ponto de Venda (POS/Restauração)": {"plano": 3, "per_user": True},
+        "BPM": {"plano": 5, "per_user": False},
+        "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
     },
     "Área Financeira e Recursos Humanos": {
         "Contabilidade": {"plano": 3, "per_user": True},
         "Ativos": {"plano": 3, "per_user": True},
         "Vencimento": {"plano": 3, "per_user": True},
-        "Colaborador": {"plano": 4, "per_user": True},
+        "Colaborador": {"plano": 5, "per_user": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
-        "OKR": {"plano": 3, "per_user": True},
+        "OKR": {"plano": 4, "per_user": True},
     },
     "Outros": {
         "Suporte": {"plano": 2, "per_user": True},
@@ -275,10 +275,26 @@ if st.button("Calcular Plano Recomendado"):
     custo_modulos = 0
     modulos_detalhe = {}
     for modulo, quantidade in selecoes.items():
-        base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
-        if base or unidade:
+        if modulo == "Ponto de Venda (POS/Restauração)":
+            preco_primeiro = preco_produtos.get(("POS (1º)", plano_final), (0, 0))[0]
+            preco_2_10 = preco_produtos.get(("POS (2 a 10)", plano_final), (0, 0))[1]
+            preco_maior_10 = preco_produtos.get(("POS (>10)", plano_final), (0, 0))[1]
+
+            if quantidade > 0:
+                restantes = quantidade - 1
+                ate_10 = min(restantes, 9)
+                acima_10 = max(restantes - 9, 0)
+                custo_base = preco_primeiro
+                custo_extra = ate_10 * preco_2_10 + acima_10 * preco_maior_10
+            else:
+                custo_base = 0
+                custo_extra = 0
+        else:
+            base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
             custo_base = base
             custo_extra = unidade * quantidade if unidade else 0
+
+        if custo_base or custo_extra:
             custo_total = custo_base + custo_extra
             custo_modulos += custo_total
             modulos_detalhe[modulo] = (custo_base, custo_extra)

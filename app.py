@@ -79,7 +79,7 @@ st.markdown("""
         .logo-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+                        margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -91,8 +91,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("Simulador de Plano PHC Evolution")
+plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])
 
-# Produtos com planos mínimos
+# Tipos de gestão (caso Corporate)
+tipo_gestao = None
+if plano_atual == "Corporate":
+    tipo_gestao = st.selectbox("Tipo de Gestão", [
+        "Gestão Clientes",
+        "Gestão Terceiros",
+        "Gestão Completo"
+    ])
+
+utilizadores = st.number_input("Nº de Utilizadores de Gestão", min_value=0, step=1, format="%d")
+
+# Nova estrutura de produtos
 produtos = {
     "Core e Transversais": {
         "Inventário Avançado": {"plano": 3, "per_user": False},
@@ -130,107 +142,6 @@ produtos = {
     },
 }
 
-# Área para colar tabela do Excel (opcional)
-with st.expander("Importar tabela", expanded=False):
-    texto_tabela = st.text_area(
-        "Cole aqui a sua tabela em formato CSV ou separado por tabulações",
-        height=200,
-    )
-
-import_data = {}
-utilizadores_importados = None
-plano_importado = 0  # 0=Corporate,1=Advanced,2=Enterprise
-extras_planos = {"intrastat": 4, "rgpd": 3}
-extras_importados = set()
-
-if texto_tabela:
-    try:
-        df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
-        if df_import.shape[1] == 1 or "Produto" not in df_import.columns:
-            df_import = pd.read_csv(StringIO(texto_tabela), sep="\t")
-        cols = [c.strip() for c in df_import.columns]
-        df_import.columns = cols
-        if "Produto" not in cols or "Quantidade" not in cols:
-            raise ValueError("missing cols")
-    except Exception:
-        st.error("Houve um erro na importação dos dados, por favor confirme se está correto")
-        df_import = pd.DataFrame()
-
-    if not df_import.empty:
-        if "Plano" in df_import.columns:
-            df_import["Plano"] = df_import["Plano"].astype(str).str.strip()
-            ordem = {"corporate": 0, "advanced": 1, "enterprise": 2}
-            for plano in df_import["Plano"]:
-                nivel = ordem.get(str(plano).lower(), 0)
-                if nivel > plano_importado:
-                    plano_importado = nivel
-
-        df_import["Produto"] = df_import["Produto"].astype(str).str.strip()
-        df_import["Quantidade"] = (
-            pd.to_numeric(df_import["Quantidade"], errors="coerce")
-            .fillna(0)
-            .astype(int)
-        )
-
-        if "Produto3" in df_import.columns:
-            df_import = df_import[~df_import["Produto3"].str.contains("Manufactor", case=False, na=False)]
-
-        df_import = df_import.groupby("Produto", as_index=False)["Quantidade"].sum()
-
-        nome_map = {
-            "careers": "Careers c/ Recrutamento",
-            "imobilizado": "Ativos",
-            "vencimentos": "Vencimento",
-        }
-
-        modulos_validos = [m for area in produtos.values() for m in area]
-
-        modulos_ignorados = {
-            "doc.eletr\u00f3nicos",
-            "doc.eletronicos",
-        }
-
-        for _, row in df_import.iterrows():
-            modulo = row["Produto"].strip()
-            quantidade = int(row["Quantidade"])
-            modulo_lower = modulo.lower()
-            if modulo_lower in ["gest\u00e3o", "gestao"]:
-                utilizadores_importados = quantidade
-                continue
-            if modulo_lower in modulos_ignorados:
-                continue
-            modulo_nome = nome_map.get(modulo_lower, modulo)
-            if modulo_nome in modulos_validos:
-                import_data[modulo_nome] = quantidade
-            elif modulo_lower in extras_planos:
-                extras_importados.add(modulo_lower)
-            else:
-                st.warning(f"M\u00f3dulo n\u00e3o reconhecido: {modulo}")
-
-plano_atual = st.selectbox(
-    "Plano Atual",
-    ["Corporate", "Advanced", "Enterprise"],
-    index=plano_importado,
-)
-
-# Tipos de gestão (caso Corporate)
-tipo_gestao = None
-if plano_atual == "Corporate":
-    tipo_gestao = st.selectbox(
-        "Tipo de Gestão",
-        ["Gestão Clientes", "Gestão Terceiros", "Gestão Completo"],
-    )
-
-
-# Campo para número de utilizadores de Gestão
-utilizadores = st.number_input(
-    "Nº de Utilizadores de Gestão",
-    min_value=0,
-    step=1,
-    format="%d",
-    value=utilizadores_importados if utilizadores_importados is not None else 0,
-)
-
 # Captura das seleções
 selecoes = {}
 bank_connector_selecionado = False
@@ -238,27 +149,21 @@ for area, modulos in produtos.items():
     with st.expander(area, expanded=False):
         if area == "Projeto":
             opcoes = ["Nenhum"] + list(modulos.keys())
-            escolha = st.radio(
-                "Selecione o módulo de Projeto",
-                opcoes,
-                index=0,
-            )
+            escolha = st.radio("Selecione o módulo de Projeto", opcoes, index=0)
             if escolha != "Nenhum":
                 info = modulos[escolha]
                 if info.get("per_user"):
-                    quantidade_padrao = import_data.get(escolha, 1)
                     selecoes[escolha] = st.number_input(
                         f"Nº Utilizadores - {escolha}",
                         min_value=1,
                         step=1,
                         format="%d",
-                        value=quantidade_padrao,
                     )
                 else:
                     selecoes[escolha] = 1
         else:
             for modulo, info in modulos.items():
-                ativado = st.checkbox(modulo, value=modulo in import_data)
+                ativado = st.checkbox(modulo)
                 if modulo == "Bank Connector":
                     st.markdown(
                         "O Plano Advanced inclui ligação a 1 Banco, o Plano Premium a 3 Bancos e o Ultimate a 5 Bancos, se precisar de mais bancos além dos incluídos, indique o nº necessário"
@@ -270,17 +175,14 @@ for area, modulos in produtos.items():
                             min_value=0,
                             step=1,
                             format="%d",
-                            value=import_data.get(modulo, 0),
                         )
                 elif ativado:
                     if info.get("per_user"):
-                        quantidade_padrao = import_data.get(modulo, 1)
                         selecoes[modulo] = st.number_input(
                             f"Nº Utilizadores - {modulo}",
                             min_value=1,
                             step=1,
                             format="%d",
-                            value=quantidade_padrao,
                         )
                     else:
                         selecoes[modulo] = 1
@@ -330,8 +232,6 @@ if st.button("Calcular Plano Recomendado"):
                 break
         if plano_min:
             planos.append(plano_min)
-    for extra_mod in extras_importados:
-        planos.append(extras_planos.get(extra_mod, 0))
     if "Colaborador" in selecoes and "Vencimento" not in selecoes:
         st.warning("O módulo Colaborador requer Vencimento")
 

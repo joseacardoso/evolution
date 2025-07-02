@@ -71,7 +71,8 @@ st.markdown("""
             color: #FFFFFF !important;
         }
 
-     .stSuccess {
+
+        .stSuccess {
             background-color: #c9cfd3 !important;
             border-left: 6px solid #0046FE !important;
             color: #000000 !important;
@@ -141,6 +142,8 @@ with st.expander("Importar tabela", expanded=False):
 import_data = {}
 utilizadores_importados = None
 plano_importado = 0  # 0=Corporate,1=Advanced,2=Enterprise
+extras_planos = {"intrastat": 4, "rgpd": 3}
+extras_importados = set()
 
 if texto_tabela:
     try:
@@ -184,18 +187,27 @@ if texto_tabela:
 
         modulos_validos = [m for area in produtos.values() for m in area]
 
+        modulos_ignorados = {
+            "doc.eletr\u00f3nicos",
+            "doc.eletronicos",
+        }
+
         for _, row in df_import.iterrows():
             modulo = row["Produto"].strip()
             quantidade = int(row["Quantidade"])
             modulo_lower = modulo.lower()
-            if modulo_lower in ["gestão", "gestao"]:
+            if modulo_lower in ["gest\u00e3o", "gestao"]:
                 utilizadores_importados = quantidade
+                continue
+            if modulo_lower in modulos_ignorados:
                 continue
             modulo_nome = nome_map.get(modulo_lower, modulo)
             if modulo_nome in modulos_validos:
                 import_data[modulo_nome] = quantidade
+            elif modulo_lower in extras_planos:
+                extras_importados.add(modulo_lower)
             else:
-                st.warning(f"Módulo não reconhecido: {modulo}")
+                st.warning(f"M\u00f3dulo n\u00e3o reconhecido: {modulo}")
 
 plano_atual = st.selectbox(
     "Plano Atual",
@@ -320,6 +332,8 @@ if st.button("Calcular Plano Recomendado"):
                 break
         if plano_min:
             planos.append(plano_min)
+    for extra_mod in extras_importados:
+        planos.append(extras_planos.get(extra_mod, 0))
     if "Colaborador" in selecoes and "Vencimento" not in selecoes:
         st.warning("O módulo Colaborador requer Vencimento")
 

@@ -79,7 +79,7 @@ st.markdown("""
         .logo-container {
             display: flex;
             justify-content: center;
-       margin-bottom: 20px;
+           margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -146,40 +146,46 @@ produtos = {
 selecoes = {}
 bank_connector_selecionado = False
 for area, modulos in produtos.items():
-    st.markdown(f"### {area}")
-    if area == "Projeto":
-        opcoes = ["Nenhum"] + list(modulos.keys())
-        escolha = st.radio("Selecione o módulo de Projeto", opcoes, index=0)
-        if escolha != "Nenhum":
-            info = modulos[escolha]
-            if info.get("per_user"):
-                selecoes[escolha] = st.number_input(
-                    f"Nº Utilizadores - {escolha}", min_value=1, step=1, format="%d"
-                )
-            else:
-                selecoes[escolha] = 1
-    else:
-        for modulo, info in modulos.items():
-            ativado = st.checkbox(modulo)
-            if modulo == "Bank Connector":
-                st.markdown(
-                    "O Plano Advanced inclui ligação a 1 Banco, o Plano Premium a 3 Bancos e o Ultimate a 5 Bancos, se precisar de mais bancos além dos incluídos, indique o nº necessário"
-                )
-                bank_connector_selecionado = ativado
-                if ativado:
-                    selecoes[modulo] = st.number_input(
-                        "Nº Bancos Adicionais",
-                        min_value=0,
+    with st.expander(area, expanded=False):
+        if area == "Projeto":
+            opcoes = ["Nenhum"] + list(modulos.keys())
+            escolha = st.radio("Selecione o módulo de Projeto", opcoes, index=0)
+            if escolha != "Nenhum":
+                info = modulos[escolha]
+                if info.get("per_user"):
+                    selecoes[escolha] = st.number_input(
+                        f"Nº Utilizadores - {escolha}",
+                        min_value=1,
                         step=1,
                         format="%d",
                     )
-            elif ativado:
-                if info.get("per_user"):
-                    selecoes[modulo] = st.number_input(
-                        f"Nº Utilizadores - {modulo}", min_value=1, step=1, format="%d"
-                    )
                 else:
-                    selecoes[modulo] = 1
+                    selecoes[escolha] = 1
+        else:
+            for modulo, info in modulos.items():
+                ativado = st.checkbox(modulo)
+                if modulo == "Bank Connector":
+                    st.markdown(
+                        "O Plano Advanced inclui ligação a 1 Banco, o Plano Premium a 3 Bancos e o Ultimate a 5 Bancos, se precisar de mais bancos além dos incluídos, indique o nº necessário"
+                    )
+                    bank_connector_selecionado = ativado
+                    if ativado:
+                        selecoes[modulo] = st.number_input(
+                            "Nº Bancos Adicionais",
+                            min_value=0,
+                            step=1,
+                            format="%d",
+                        )
+                elif ativado:
+                    if info.get("per_user"):
+                        selecoes[modulo] = st.number_input(
+                            f"Nº Utilizadores - {modulo}",
+                            min_value=1,
+                            step=1,
+                            format="%d",
+                        )
+                    else:
+                        selecoes[modulo] = 1
 
 # Lógica do plano
 if st.button("Calcular Plano Recomendado"):
@@ -267,11 +273,15 @@ if st.button("Calcular Plano Recomendado"):
             custo_extra_utilizadores = grupo1 * preco_ate_10
 
     custo_modulos = 0
+    modulos_detalhe = {}
     for modulo, quantidade in selecoes.items():
         base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
         if base or unidade:
-            custo = base + unidade * quantidade
-            custo_modulos += custo
+            custo_base = base
+            custo_extra = unidade * quantidade if unidade else 0
+            custo_total = custo_base + custo_extra
+            custo_modulos += custo_total
+            modulos_detalhe[modulo] = (custo_base, custo_extra)
 
     custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
 
@@ -279,18 +289,19 @@ if st.button("Calcular Plano Recomendado"):
     st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
 
     detalhes = []
-    detalhes.append(f"Plano Base: {preco_base:.2f} €")
-    if grupo1 > 0:
-        detalhes.append(f"{grupo1} Utilizadores adicionais (até 10): {grupo1 * preco_ate_10:.2f} €")
-    if grupo2 > 0:
-        detalhes.append(f"{grupo2} Utilizadores adicionais (até 50): {grupo2 * preco_ate_50:.2f} €")
-    if grupo3 > 0:
-        detalhes.append(f"{grupo3} Utilizadores adicionais (mais de 50): {grupo3 * preco_mais_50:.2f} €")
+    detalhes.append(f"Preço do Plano Base: {preco_base:.2f} €")
+    if custo_extra_utilizadores > 0:
+        detalhes.append(
+            f"Preço dos Full Users adicionais: {custo_extra_utilizadores:.2f} €"
+        )
 
-    for modulo, quantidade in selecoes.items():
-        base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
-        if base or unidade:
-            detalhes.append(f"{modulo}: {(base + unidade * quantidade):.2f} €")
+    for modulo, custos in modulos_detalhe.items():
+        custo_base, custo_extra = custos
+        detalhes.append(f"{modulo}: {custo_base:.2f} €")
+        if custo_extra > 0:
+            detalhes.append(
+                f"{modulo} (Utilizadores Adicionais): {custo_extra:.2f} €"
+            )
 
     for linha in detalhes:
         st.markdown(f"<p style='color:#000000;'>• {linha}</p>", unsafe_allow_html=True)

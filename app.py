@@ -80,7 +80,7 @@ st.markdown("""
             display: flex;
             justify-content: center;
      
-            margin-bottom: 20px;
+                 margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)

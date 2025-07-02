@@ -191,6 +191,7 @@ for area, modulos in produtos.items():
     st.markdown(f"### {area}")
     for modulo in modulos:
         ativado = st.checkbox(f"{modulo}", value=modulo in import_data)
+        
         if ativado:
             quantidade_padrao = import_data.get(modulo, 1)
             selecoes[modulo] = st.number_input(
@@ -216,18 +217,25 @@ if st.button("Calcular Plano Recomendado"):
         elif tipo_gestao == "Gestão Completo":
             planos.append(3)
 
-    if utilizadores <= 1:
-        planos.append(1)
-    elif utilizadores <= 2:
-        planos.append(2)
-    elif utilizadores <= 5:
-        planos.append(3)
-    elif utilizadores <= 10:
-        planos.append(4)
-    elif utilizadores <= 50:
-        planos.append(5)
-    else:
-        planos.append(6)
+    csv_path = "precos_planos.csv"
+    df_precos = pd.read_csv(csv_path, sep=",")
+
+    limites = [
+        (int(row["plano_id"]), row.get("limite_utilizadores"))
+        for _, row in df_precos.iterrows()
+    ]
+    limites.sort(key=lambda x: x[0])
+
+    plano_utilizadores = None
+    for pid, limite in limites:
+        if pd.notna(limite) and str(limite).strip() != "":
+            if utilizadores <= int(limite):
+                plano_utilizadores = pid
+                break
+    if plano_utilizadores is None:
+        plano_utilizadores = max(pid for pid, _ in limites)
+
+    planos.append(plano_utilizadores)
 
     for modulo, num_utilizadores in selecoes.items():
         if num_utilizadores > 0:
@@ -240,9 +248,6 @@ if st.button("Calcular Plano Recomendado"):
                 planos.append(plano_min)
 
     plano_final = max(planos) if planos else 1
-
-    csv_path = "precos_planos.csv"
-    df_precos = pd.read_csv(csv_path, sep=",")
     preco_planos = {
         int(row["plano_id"]): (
             row["nome"],
@@ -268,22 +273,3 @@ if st.button("Calcular Plano Recomendado"):
             grupo3 = max(0, extras - 45)
             custo_extra_utilizadores = grupo1 * preco_ate_10 + grupo2 * preco_ate_50 + grupo3 * preco_mais_50
         else:
-            grupo1 = extras
-            custo_extra_utilizadores = grupo1 * preco_ate_10
-
-    custo_estimado = preco_base + custo_extra_utilizadores
-
-    st.success(f"Plano PHC Evolution recomendado: {nome}")
-    st.markdown(f"**Previsão de Custo do Plano:** {custo_estimado:.2f} €")
-
-    detalhes = []
-    detalhes.append(f"Plano Base: {preco_base:.2f} €")
-    if grupo1 > 0:
-        detalhes.append(f"{grupo1} Utilizadores adicionais (até 10): {grupo1 * preco_ate_10:.2f} €")
-    if grupo2 > 0:
-        detalhes.append(f"{grupo2} Utilizadores adicionais (até 50): {grupo2 * preco_ate_50:.2f} €")
-    if grupo3 > 0:
-        detalhes.append(f"{grupo3} Utilizadores adicionais (mais de 50): {grupo3 * preco_mais_50:.2f} €")
-
-    for linha in detalhes:
-        st.markdown(f"<p style='color:#000000;'>• {linha}</p>", unsafe_allow_html=True)

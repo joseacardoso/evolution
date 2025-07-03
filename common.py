@@ -82,12 +82,11 @@ def setup_page(dark: bool = False) -> None:
 
 def format_euro(valor: float, *, pdf: bool = False) -> str:
     """Return ``valor`` formatted in euros.
-
-    ``fpdf`` is able to handle the Unicode Euro sign when custom
-    TrueType fonts are embedded (``uni=True``).  Encoding the symbol as
-    ``chr(128)`` causes it to disappear with these fonts, so we always
-    use the standard ``€`` character.  The ``pdf`` parameter is kept for
-    backward compatibility but no longer changes the output.
+    
+    By default the function uses the Unicode Euro sign.  When
+    ``pdf`` is ``True`` the symbol is encoded as the Windows‑1252
+    code point (``chr(128)``) so that it can be rendered correctly
+    even when using the bundled ``fpdf`` standard fonts.
     """
 
     valor_str = f"{int(round(valor)):,}".replace(",", ".")

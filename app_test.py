@@ -13,8 +13,19 @@ if st is None or pd is None:
         return str(text)
 else:
     from common import calculate_plan, format_euro, produtos, setup_page
+    from pathlib import Path
+
     st.set_page_config(layout="centered")
     setup_page(dark=st.get_option("theme.base") == "dark")
+
+    _FONTS_DIR = Path("fonts_dir")
+    _FONT_REGULAR = _FONTS_DIR / "segoeui.ttf"
+    _FONT_BOLD = _FONTS_DIR / "segoeuib.ttf"
+    _FONT_NAME = "Helvetica"
+    _USE_CUSTOM_FONT = False
+    if _FONT_REGULAR.exists() and _FONT_REGULAR.stat().st_size > 100000:
+        _FONT_NAME = "SegoeUI"
+        _USE_CUSTOM_FONT = True
 
 
     def normalize(text: str) -> str:
@@ -27,22 +38,16 @@ else:
     def gerar_pdf(linhas: list[tuple[str, int, float, float]]) -> bytes:
         """Create a simple PDF with a table of products."""
         from fpdf import FPDF
-        from pathlib import Path
-    
+
         pdf = FPDF()
         pdf.add_page()
-    
-        fonts_dir = Path("fonts_dir")
-        font_regular = fonts_dir / "segoeui.ttf"
-        font_bold = fonts_dir / "segoeuib.ttf"
-        use_custom = False
-        font_name = "Helvetica"
-        if font_regular.exists() and font_regular.stat().st_size > 100000:
-            font_name = "SegoeUI"
-            pdf.add_font(font_name, "", str(font_regular), uni=True)
-            if font_bold.exists() and font_bold.stat().st_size > 100000:
-                pdf.add_font(font_name, "B", str(font_bold), uni=True)
-            use_custom = True
+
+        font_name = _FONT_NAME
+        use_custom = _USE_CUSTOM_FONT
+        if _USE_CUSTOM_FONT:
+            pdf.add_font(font_name, "", str(_FONT_REGULAR), uni=True)
+            if _FONT_BOLD.exists() and _FONT_BOLD.stat().st_size > 100000:
+                pdf.add_font(font_name, "B", str(_FONT_BOLD), uni=True)
     
         pdf.set_font(font_name, size=12)
         pdf.cell(0, 10, "Proposta interna Cegid PHC Evolution", ln=True, align="C")

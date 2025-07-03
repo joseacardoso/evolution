@@ -82,15 +82,16 @@ def setup_page(dark: bool = False) -> None:
 
 def format_euro(valor: float, *, pdf: bool = False) -> str:
     """Return ``valor`` formatted in euros.
-    
-    By default the function uses the Unicode Euro sign.  When
-    ``pdf`` is ``True`` the symbol is encoded as the Windows‑1252
-    code point (``chr(128)``) so that it can be rendered correctly
-    even when using the bundled ``fpdf`` standard fonts.
+
+    The formatting uses a dot as the thousands separator followed by a
+    trailing Euro symbol.  When ``pdf`` is ``True`` the Euro sign is returned
+    as the Windows‑1252 code point (``chr(128)``) so that ``fpdf`` can encode
+    it correctly when using the built‑in fonts.
     """
 
     valor_str = f"{int(round(valor)):,}".replace(",", ".")
-    return f"{valor_str} €"
+    symbol = chr(128) if pdf else "€"
+    return f"{valor_str} {symbol}"
 
 
 def calculate_plan(

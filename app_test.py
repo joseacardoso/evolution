@@ -37,13 +37,13 @@ def gerar_pdf(linhas: list[tuple[str, int, float, float]]) -> bytes:
     for prod, qtd, unit, total in linhas:
         pdf.cell(colw[0], 8, str(prod), border=1)
         pdf.cell(colw[1], 8, str(qtd), border=1, align="C")
-        pdf.cell(colw[2], 8, format_euro(unit), border=1, align="R")
-        pdf.cell(colw[3], 8, format_euro(total), border=1, align="R")
+        pdf.cell(colw[2], 8, format_euro(unit, pdf=True), border=1, align="R")
+        pdf.cell(colw[3], 8, format_euro(total, pdf=True), border=1, align="R")
         pdf.ln()
 
     valor_total = sum(t for _, _, _, t in linhas)
     pdf.cell(colw[0] + colw[1] + colw[2], 8, "Total", border=1)
-    pdf.cell(colw[3], 8, format_euro(valor_total), border=1, align="R")
+    pdf.cell(colw[3], 8, format_euro(valor_total, pdf=True), border=1, align="R")
 
     return pdf.output(dest="S").encode("latin-1")
 

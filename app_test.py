@@ -434,12 +434,19 @@ if st.button("Calcular Plano Recomendado"):
     linhas_pdf.append((f"Plano {resultado['nome']}", 1, resultado['preco_base'], resultado['preco_base']))
     if resultado['custo_extra_utilizadores'] > 0:
         unit = resultado['custo_extra_utilizadores'] / resultado['extras_utilizadores']
-        linhas_pdf.append(("Full Users adicionais", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
+        linhas_pdf.append(("  Full Users adicionais", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
+
     for modulo, custos in resultado['modulos_detalhe'].items():
         qtd = selecoes.get(modulo, 1)
-        total = sum(custos)
-        unit = total / qtd if qtd else total
-        linhas_pdf.append((modulo, qtd, unit, total))
+        custo_base, custo_extra = custos
+
+        # linha do produto propriamente dito
+        linhas_pdf.append((modulo, 1, custo_base, custo_base))
+
+        # linha adicional com utilizadores (se existir)
+        if custo_extra > 0:
+            unit_extra = custo_extra / qtd if qtd else custo_extra
+            linhas_pdf.append((f"  {modulo} (Utilizadores Adicionais)", qtd, unit_extra, custo_extra))
 
     pdf_bytes = gerar_pdf(linhas_pdf)
     st.download_button(

@@ -79,8 +79,7 @@ st.markdown("""
         .logo-container {
             display: flex;
             justify-content: center;
-     
-            margin-bottom: 20px;
+                 margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -112,6 +111,8 @@ produtos = {
         "Frota": {"plano": 3, "per_user": False},
         "Logística": {"plano": 5, "per_user": False},
         "Denúncias": {"plano": 5, "per_user": False},
+        "Documentos": {"plano": 3, "per_user": False},
+        "GenAI": {"plano": 2, "per_user": False},
         "CRM": {"plano": 3, "per_user": True},
         "BPM": {"plano": 5, "per_user": False},
         "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
@@ -123,6 +124,8 @@ produtos = {
         "Colaborador": {"plano": 5, "per_user": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
         "OKR": {"plano": 4, "per_user": True},
+        "Formação": {"plano": 3, "per_user": False},
+        "Imóveis": {"plano": 3, "per_user": False},
     },
     "Outros": {
         "Suporte": {"plano": 2, "per_user": True},
@@ -344,3 +347,9 @@ if st.button("Calcular Plano Recomendado"):
                 f"<p style='color:#000000;'>Bank Connector inclui {bancos_base} banco(s) base.</p>",
                 unsafe_allow_html=True,
             )
+
+    if "GenAI" in selecoes:
+        st.markdown(
+            "<p style='color:#000000;'>O cliente tinha GenAI e vai evoluir para Cegid Pulse.</p>",
+            unsafe_allow_html=True,
+        )

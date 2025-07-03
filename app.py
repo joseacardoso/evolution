@@ -1,8 +1,8 @@
 import streamlit as st
-from common import calculate_plan, format_euro, produtos, LOGO
+from common import calculate_plan, format_euro, produtos, setup_page
 
 st.set_page_config(layout="centered")
-st.markdown(LOGO, unsafe_allow_html=True)
+setup_page(dark=st.get_option("theme.base") == "dark")
 
 st.title("Simulador de Plano PHC Evolution")
 plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])

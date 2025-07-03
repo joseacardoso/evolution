@@ -80,20 +80,18 @@ def setup_page(dark: bool = False) -> None:
     st.markdown(f'<div class="logo-container">{logo_svg}</div>', unsafe_allow_html=True)
 
 
-def format_euro(valor: float) -> str:
-    """Format a number as euro currency without using the Unicode euro sign.
+def format_euro(valor: float, *, pdf: bool = False) -> str:
+    """Return ``valor`` formatted in euros.
 
-    The ``fpdf`` library bundled with this project only supports Latin‑1
-    characters.  The standard Euro symbol (``\u20AC``) is not part of that
-    encoding and would therefore trigger ``UnicodeEncodeError`` when creating a
-    PDF.  To keep the Euro sign while staying compatible with Latin‑1 we use
-    the Windows‑1252 code point instead (``chr(128)``), which ``fpdf`` can
-    handle.
+    When ``pdf`` is ``True`` the Euro symbol is encoded using the
+    Windows‑1252 code point (``chr(128)``) so that the bundled ``fpdf``
+    library can render it correctly.  For normal UI display the standard
+    Unicode Euro sign is used.
     """
 
-    euro_cp1252 = chr(128)  # maps to the Euro sign under Windows‑1252
+    euro_symbol = chr(128) if pdf else "€"
     valor_str = f"{int(round(valor)):,}".replace(",", ".")
-    return f"{valor_str} {euro_cp1252}"
+    return f"{valor_str} {euro_symbol}"
 
 
 def calculate_plan(

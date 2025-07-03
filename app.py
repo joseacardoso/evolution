@@ -1,7 +1,9 @@
 import streamlit as st
 from common import calculate_plan, format_euro, produtos, setup_page
 
-setup_page()
+st.set_page_config(layout="centered")
+dark_mode = st.sidebar.checkbox("Modo Escuro")
+setup_page(dark=dark_mode)
 
 st.title("Simulador de Plano PHC Evolution")
 plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])

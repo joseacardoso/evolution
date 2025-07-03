@@ -10,17 +10,8 @@ with open("style_dark.css", encoding="utf-8") as f:
 
 IMAGES_DIR = "images"
 
-LOGO_LIGHT = f"""
-    <div class="logo-container">
-        <img src="{IMAGES_DIR}/PHC Evolution.svg" width="220" />
-    </div>
-"""
-
-LOGO_DARK = f"""
-    <div class="logo-container">
-        <img src="{IMAGES_DIR}/PHC Evolution_white.svg" width="220" />
-    </div>
-"""
+LOGO_LIGHT_PATH = f"{IMAGES_DIR}/PHC Evolution.svg"
+LOGO_DARK_PATH = f"{IMAGES_DIR}/PHC Evolution_white.svg"
 
 
 @lru_cache(maxsize=None)
@@ -80,9 +71,13 @@ produtos = {
 def setup_page(dark: bool = False) -> None:
     """Apply common Streamlit styling and logo."""
     style = STYLE_DARK if dark else STYLE_LIGHT
-    logo = LOGO_DARK if dark else LOGO_LIGHT
+    logo_path = LOGO_DARK_PATH if dark else LOGO_LIGHT_PATH
     st.markdown(style, unsafe_allow_html=True)
-    st.markdown(logo, unsafe_allow_html=True)
+    # Streamlit can't load SVG files with ``st.image``, so read the file
+    # content and embed it directly in the page.
+    with open(logo_path, encoding="utf-8") as f:
+        logo_svg = f.read()
+    st.markdown(f'<div class="logo-container">{logo_svg}</div>', unsafe_allow_html=True)
 
 
 def format_euro(valor: float) -> str:

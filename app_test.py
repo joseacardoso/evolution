@@ -23,13 +23,13 @@ def gerar_pdf(linhas: list[tuple[str, int, float, float]]) -> bytes:
 
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, "Or\u00e7amento Cegid PHC Evolution", ln=True, align="C")
+    pdf.set_font("Segoe UI", size=12)
+    pdf.cell(0, 10, "Proposta interna Cegid PHC Evolution", ln=True, align="C")
     pdf.ln(5)
 
     colw = [80, 20, 40, 40]
     headers = ["Produto", "Qtd", "Valor Unit.", "Total"]
-    pdf.set_font("Arial", size=10)
+    pdf.set_font("Segoe UI", size=10)
     for w, h in zip(colw, headers):
         pdf.cell(w, 8, h, border=1, align="C")
     pdf.ln()

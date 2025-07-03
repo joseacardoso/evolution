@@ -1,0 +1,291 @@
+import pandas as pd
+import streamlit as st
+
+STYLE = """
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
+
+        html, body, [class*="css"] {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #FFFFFF !important;
+        }
+
+        .stApp {
+            background-color: #FFFFFF !important;
+        }
+
+        body, h1, h2, h3, h4, p, label, span,
+        .stCheckbox>div, .stCheckbox span, .stCheckbox label span,
+        .stSelectbox label, .stNumberInput label,
+        .stMarkdown span, .stMarkdown p, .stMarkdown div,
+        .css-1x8cf1d, .css-1v0mbdj span, .css-17eq0hr, .css-1r6slb0 {
+            color: #000000 !important;
+            font-weight: 500 !important;
+            opacity: 1 !important;
+        }
+
+        .stSelectbox div[data-baseweb],
+        .stNumberInput input,
+        .stSelectbox [data-baseweb="select"] > div {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+
+        .stNumberInput button {
+            background-color: #FF5C35 !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            border-radius: 4px !important;
+        }
+
+        .stButton>button {
+            background-color: #FF5C35 !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 0.4em 1.2em !important;
+            font-weight: bold !important;
+            font-size: 1rem !important;
+            display: block;
+            margin: 1.2em auto 1em auto !important;
+            width: auto;
+            max-width: 240px;
+            white-space: nowrap !important;
+            line-height: 1.2 !important;
+        }
+
+        .stButton>button:hover {
+            background-color: #cc4829 !important;
+            color: #FFFFFF !important;
+            transition: background-color 0.3s ease;
+        }
+
+        .stButton button * {
+            color: #FFFFFF !important;
+        }
+
+ .stSuccess {
+            background-color: #c9cfd3 !important;
+            border-left: 6px solid #0046FE !important;
+            color: #000000 !important;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+                 margin-bottom: 20px;
+        }
+    </style>
+"""
+
+LOGO = """
+    <div class="logo-container">
+        <img src="https://phcsoftware.com/pt/wp-content/uploads/sites/3/2023/11/logo.svg" width="220" />
+    </div>
+"""
+
+produtos = {
+    "Core e Transversais": {
+        "Inventário Avançado": {"plano": 3, "per_user": False},
+        "Frota": {"plano": 3, "per_user": False},
+        "Logística": {"plano": 5, "per_user": False},
+        "Denúncias": {"plano": 5, "per_user": False},
+        "Documentos": {"plano": 3, "per_user": False},
+        "GenAI": {"plano": 2, "per_user": False},
+        "CRM": {"plano": 3, "per_user": True},
+        "BPM": {"plano": 5, "per_user": False},
+        "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
+    },
+    "Área Financeira e Recursos Humanos": {
+        "Contabilidade": {"plano": 3, "per_user": True},
+        "Ativos": {"plano": 3, "per_user": True},
+        "Vencimento": {"plano": 3, "per_user": True},
+        "Colaborador": {"plano": 5, "per_user": True},
+        "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
+        "OKR": {"plano": 4, "per_user": True},
+        "Formação": {"plano": 3, "per_user": False},
+        "Imóveis": {"plano": 3, "per_user": False},
+    },
+    "Outros": {
+        "Suporte": {"plano": 2, "per_user": True},
+        "Ecommerce B2B": {"plano": 3, "per_user": False},
+    },
+    "Projeto": {
+        "Orçamentação": {"plano": 3, "per_user": True},
+        "Orçamentação + Medição": {"plano": 3, "per_user": True},
+        "Orçamentação + Medição + Controlo": {"plano": 3, "per_user": True},
+        "Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços": {
+            "plano": 3,
+            "per_user": True,
+        },
+    },
+    "Connected Services": {
+        "Bank Connector": {"plano": 4, "per_user": False},
+        "EDI Broker": {"plano": 1, "per_user": False},
+    },
+}
+
+
+def setup_page() -> None:
+    """Apply common Streamlit configuration and styling."""
+    st.set_page_config(layout="centered")
+    st.markdown(STYLE, unsafe_allow_html=True)
+    st.markdown(LOGO, unsafe_allow_html=True)
+
+
+def format_euro(valor: float) -> str:
+    """Format a number as euro currency."""
+    return f"{int(round(valor)):,}".replace(",", ".") + " €"
+
+
+def calculate_plan(
+    plano_atual: str,
+    tipo_gestao: str | None,
+    utilizadores: int,
+    selecoes: dict[str, int],
+    extras_importados: set[str] | None = None,
+    extras_planos: dict[str, int] | None = None,
+) -> dict:
+    """Return planning information based on selections."""
+    extras_importados = extras_importados or set()
+    extras_planos = extras_planos or {}
+    warnings: list[str] = []
+
+    planos = []
+    if plano_atual == "Enterprise":
+        planos.append(6)
+    elif plano_atual == "Advanced":
+        planos.append(4)
+    elif plano_atual == "Corporate":
+        planos.append(1)
+        if tipo_gestao == "Gestão Terceiros":
+            planos.append(2)
+        elif tipo_gestao == "Gestão Completo":
+            planos.append(3)
+
+    df_precos = pd.read_csv("precos_planos.csv", sep=",")
+    df_produtos = pd.read_csv("precos_produtos.csv", sep=",")
+
+    limites = [
+        (int(row["plano_id"]), row.get("limite_utilizadores"))
+        for _, row in df_precos.iterrows()
+    ]
+    limites.sort(key=lambda x: x[0])
+
+    plano_utilizadores = None
+    for pid, limite in limites:
+        if pd.notna(limite) and str(limite).strip() != "":
+            if utilizadores <= int(limite):
+                plano_utilizadores = pid
+                break
+    if plano_utilizadores is None:
+        plano_utilizadores = max(pid for pid, _ in limites)
+
+    planos.append(plano_utilizadores)
+
+    for modulo in selecoes:
+        for area in produtos.values():
+            if modulo in area:
+                planos.append(area[modulo].get("plano"))
+                break
+
+    for extra_mod in extras_importados:
+        planos.append(extras_planos.get(extra_mod, 0))
+
+    if "Colaborador" in selecoes and "Vencimento" not in selecoes:
+        warnings.append("O módulo Colaborador requer Vencimento")
+
+    plano_final = max(planos) if planos else 1
+
+    preco_planos = {
+        int(row["plano_id"]): (
+            row["nome"],
+            float(row.get("preco_base", 0) or 0),
+            int(row.get("utilizadores_incluidos", 0) or 0),
+            float(row.get("preco_extra_ate_10", 0))
+            if str(row.get("preco_extra_ate_10", "")).strip()
+            else 0,
+            float(row.get("preco_extra_ate_50", 0))
+            if str(row.get("preco_extra_ate_50", "")).strip()
+            else 0,
+            float(row.get("preco_extra_acima_50", 0))
+            if str(row.get("preco_extra_acima_50", "")).strip()
+            else 0,
+        )
+        for _, row in df_precos.iterrows()
+    }
+
+    nome, preco_base, incluidos, preco_ate_10, preco_ate_50, preco_mais_50 = preco_planos[plano_final]
+
+    preco_produtos = {
+        (row["produto"], int(row["plano_id"])): (
+            float(row.get("preco_base", 0) or 0),
+            float(row.get("preco_unidade", 0) or 0),
+        )
+        for _, row in df_produtos.iterrows()
+    }
+
+    extras = max(0, utilizadores - incluidos)
+    grupo1 = grupo2 = grupo3 = 0
+    custo_extra_utilizadores = 0
+
+    if extras > 0:
+        if plano_final == 6:
+            grupo1 = min(5, extras)
+            grupo2 = min(40, max(0, extras - 5))
+            grupo3 = max(0, extras - 45)
+            custo_extra_utilizadores = (
+                grupo1 * preco_ate_10 + grupo2 * preco_ate_50 + grupo3 * preco_mais_50
+            )
+        else:
+            grupo1 = extras
+            custo_extra_utilizadores = grupo1 * preco_ate_10
+
+    custo_modulos = 0
+    modulos_detalhe: dict[str, tuple[float, float]] = {}
+    for modulo, quantidade in selecoes.items():
+        if modulo == "Ponto de Venda (POS/Restauração)":
+            preco_primeiro = preco_produtos.get(("POS (1º)", plano_final), (0, 0))[0]
+            preco_2_10 = preco_produtos.get(("POS (2 a 10)", plano_final), (0, 0))[1]
+            preco_maior_10 = preco_produtos.get(("POS (>10)", plano_final), (0, 0))[1]
+
+            if quantidade > 0:
+                restantes = quantidade - 1
+                ate_10 = min(restantes, 9)
+                acima_10 = max(restantes - 9, 0)
+                custo_base = preco_primeiro
+                custo_extra = ate_10 * preco_2_10 + acima_10 * preco_maior_10
+            else:
+                custo_base = 0
+                custo_extra = 0
+        else:
+            base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
+            custo_base = base
+            custo_extra = unidade * quantidade if unidade else 0
+
+        if custo_base or custo_extra:
+            custo_modulos += custo_base + custo_extra
+            modulos_detalhe[modulo] = (custo_base, custo_extra)
+
+    custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
+
+    bancos_base = 0
+    if "Bank Connector" in selecoes:
+        if plano_final == 4:
+            bancos_base = 1
+        elif plano_final == 5:
+            bancos_base = 3
+        elif plano_final == 6:
+            bancos_base = 5
+
+    return {
+        "nome": nome,
+        "preco_base": preco_base,
+        "custo_estimado": custo_estimado,
+        "extras_utilizadores": extras,
+        "custo_extra_utilizadores": custo_extra_utilizadores,
+        "modulos_detalhe": modulos_detalhe,
+        "plano_final": plano_final,
+        "bancos_base": bancos_base,
+        "warnings": warnings,
+    }

@@ -1,88 +1,27 @@
 import pandas as pd
 import streamlit as st
+from functools import lru_cache
 
-STYLE = """
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
-
-        html, body, [class*="css"] {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #FFFFFF !important;
-        }
-
-        .stApp {
-            background-color: #FFFFFF !important;
-        }
-
-        body, h1, h2, h3, h4, p, label, span,
-        .stCheckbox>div, .stCheckbox span, .stCheckbox label span,
-        .stSelectbox label, .stNumberInput label,
-        .stMarkdown span, .stMarkdown p, .stMarkdown div,
-        .css-1x8cf1d, .css-1v0mbdj span, .css-17eq0hr, .css-1r6slb0 {
-            color: #000000 !important;
-            font-weight: 500 !important;
-            opacity: 1 !important;
-        }
-
-        .stSelectbox div[data-baseweb],
-        .stNumberInput input,
-        .stSelectbox [data-baseweb="select"] > div {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-
-        .stNumberInput button {
-            background-color: #FF5C35 !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            border-radius: 4px !important;
-        }
-
-        .stButton>button {
-            background-color: #FF5C35 !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 0.4em 1.2em !important;
-            font-weight: bold !important;
-            font-size: 1rem !important;
-            display: block;
-            margin: 1.2em auto 1em auto !important;
-            width: auto;
-            max-width: 240px;
-            white-space: nowrap !important;
-            line-height: 1.2 !important;
-        }
-
-        .stButton>button:hover {
-            background-color: #cc4829 !important;
-            color: #FFFFFF !important;
-            transition: background-color 0.3s ease;
-        }
-
-        .stButton button * {
-            color: #FFFFFF !important;
-        }
-
- .stSuccess {
-            background-color: #c9cfd3 !important;
-            border-left: 6px solid #0046FE !important;
-            color: #000000 !important;
-        }
-
-        .logo-container {
-            display: flex;
-            justify-content: center;
-                 margin-bottom: 20px;
-        }
-    </style>
-"""
+with open("style.css", encoding="utf-8") as f:
+    STYLE = f.read()
 
 LOGO = """
     <div class="logo-container">
         <img src="https://phcsoftware.com/pt/wp-content/uploads/sites/3/2023/11/logo.svg" width="220" />
     </div>
 """
+
+
+@lru_cache(maxsize=None)
+def load_precos_planos() -> pd.DataFrame:
+    """Load pricing table for plans with caching."""
+    return pd.read_csv("precos_planos.csv", sep=",")
+
+
+@lru_cache(maxsize=None)
+def load_precos_produtos() -> pd.DataFrame:
+    """Load pricing table for modules with caching."""
+    return pd.read_csv("precos_produtos.csv", sep=",")
 
 produtos = {
     "Core e Transversais": {
@@ -163,8 +102,8 @@ def calculate_plan(
         elif tipo_gestao == "Gestão Completo":
             planos.append(3)
 
-    df_precos = pd.read_csv("precos_planos.csv", sep=",")
-    df_produtos = pd.read_csv("precos_produtos.csv", sep=",")
+    df_precos = load_precos_planos()
+    df_produtos = load_precos_produtos()
 
     limites = [
         (int(row["plano_id"]), row.get("limite_utilizadores"))

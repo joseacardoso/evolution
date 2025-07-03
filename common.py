@@ -3,7 +3,10 @@ import streamlit as st
 from functools import lru_cache
 
 with open("style.css", encoding="utf-8") as f:
-    STYLE = f.read()
+    STYLE_LIGHT = f.read()
+
+with open("style_dark.css", encoding="utf-8") as f:
+    STYLE_DARK = f.read()
 
 LOGO = """
     <div class="logo-container">
@@ -42,6 +45,7 @@ produtos = {
         "Colaborador": {"plano": 5, "per_user": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
         "OKR": {"plano": 4, "per_user": True},
+        "Equipa": {"plano": 3, "per_user": True},
         "Formação": {"plano": 3, "per_user": False},
         "Imóveis": {"plano": 3, "per_user": False},
     },
@@ -65,10 +69,10 @@ produtos = {
 }
 
 
-def setup_page() -> None:
-    """Apply common Streamlit configuration and styling."""
-    st.set_page_config(layout="centered")
-    st.markdown(STYLE, unsafe_allow_html=True)
+def setup_page(dark: bool = False) -> None:
+    """Apply common Streamlit styling and logo."""
+    style = STYLE_DARK if dark else STYLE_LIGHT
+    st.markdown(style, unsafe_allow_html=True)
     st.markdown(LOGO, unsafe_allow_html=True)
 
 

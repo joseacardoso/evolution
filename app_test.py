@@ -6,6 +6,10 @@ import unicodedata
 from io import StringIO
 from common import calculate_plan, format_euro, produtos, setup_page
 
+st.set_page_config(layout="centered")
+dark_mode = st.sidebar.checkbox("Modo Escuro")
+setup_page(dark=dark_mode)
+
 
 def normalize(text: str) -> str:
     """Return lowercase text without accents."""
@@ -13,8 +17,36 @@ def normalize(text: str) -> str:
         c for c in unicodedata.normalize("NFD", str(text)) if unicodedata.category(c) != "Mn"
     ).lower()
 
-# Força tema claro no Streamlit
-setup_page()
+
+def gerar_pdf(linhas: list[tuple[str, int, float, float]]) -> bytes:
+    """Create a simple PDF with a table of products."""
+    from fpdf import FPDF
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, "Or\u00e7amento Cegid PHC Evolution", ln=True, align="C")
+    pdf.ln(5)
+
+    colw = [80, 20, 40, 40]
+    headers = ["Produto", "Qtd", "Valor Unit.", "Total"]
+    pdf.set_font(size=10)
+    for w, h in zip(colw, headers):
+        pdf.cell(w, 8, h, border=1, align="C")
+    pdf.ln()
+
+    for prod, qtd, unit, total in linhas:
+        pdf.cell(colw[0], 8, str(prod), border=1)
+        pdf.cell(colw[1], 8, str(qtd), border=1, align="C")
+        pdf.cell(colw[2], 8, format_euro(unit), border=1, align="R")
+        pdf.cell(colw[3], 8, format_euro(total), border=1, align="R")
+        pdf.ln()
+
+    valor_total = sum(t for _, _, _, t in linhas)
+    pdf.cell(colw[0] + colw[1] + colw[2], 8, "Total", border=1)
+    pdf.cell(colw[3], 8, format_euro(valor_total), border=1, align="R")
+
+    return pdf.output(dest="S").encode("latin-1")
 
 st.title("Simulador de Plano PHC Evolution")
 
@@ -34,9 +66,12 @@ extras_planos = {
     "rgpd": 3,
     "documentos": 3,
     "genai": 2,
+    "sms": 3,
+    "multilingua": 2,
 }
 extras_importados = set()
 manuf_count = 0
+nao_disponiveis = set()
 
 if texto_tabela:
     try:
@@ -103,6 +138,8 @@ if texto_tabela:
             "ocupação",
             "ocupacao",
             "terminais",
+            "terminais portateis",
+            "terminais portáteis",
             "serviços",
             "servicos",
             "obras",
@@ -136,9 +173,15 @@ if texto_tabela:
             "vencimentos": "Vencimento",
             "denuncias": "Denúncias",
             "documentos": "Documentos",
+            "documentos intranet": "Documentos",
+            "documentosintranet": "Documentos",
             "genai": "GenAI",
             "formacao": "Formação",
             "imoveis": "Imóveis",
+            "terminais portateis": "Inventário Avançado",
+            "terminais portáteis": "Inventário Avançado",
+            "suporte extranet": "Suporte",
+            "suporteextranet": "Suporte",
             "orcamento": "Orçamentação",
             "medicao": "Orçamentação + Medição",
             "controlo": "Orçamentação + Medição + Controlo",
@@ -151,6 +194,19 @@ if texto_tabela:
         modulos_ignorados = {
             "doc.eletr\u00f3nicos",
             "doc.eletronicos",
+            "consolidacao",
+            "mrp",
+            "platform",
+            "planning",
+            "touch",
+            "qualidade",
+            "sincro",
+            "ecommerceb2c",
+            "estacoes",
+            "esta\u00e7\u00f5es",
+            "clinica",
+            "xl",
+            "safe credit",
         }
 
         projeto_partes = set()
@@ -166,6 +222,24 @@ if texto_tabela:
                 utilizadores_importados = total_mod
                 continue
             if modulo_lower in modulos_ignorados:
+                if modulo_lower in {
+                    "consolidacao",
+                    "mrp",
+                    "platform",
+                    "planning",
+                    "touch",
+                    "qualidade",
+                }:
+                    manuf_count += 1
+                elif modulo_lower in {
+                    "xl",
+                    "safe credit",
+                    "ecommerceb2c",
+                    "estacoes",
+                    "esta\u00e7\u00f5es",
+                    "clinica",
+                }:
+                    nao_disponiveis.add(modulo)
                 continue
             modulo_nome = nome_map.get(modulo_lower, modulo)
             if modulo_nome in modulos_validos:
@@ -350,3 +424,28 @@ if st.button("Calcular Plano Recomendado"):
         st.info(
             "O Cegid PHC CS Manufactor n\u00e3o estar\u00e1 dispon\u00edvel no Cegid PHC Evolution, e por isso n\u00e3o ser\u00e1 considerado"
         )
+    if nao_disponiveis:
+        lista = ", ".join(sorted(nao_disponiveis))
+        st.info(
+            f"Os m\u00f3dulos {lista} n\u00e3o est\u00e3o dispon\u00edveis no Cegid PHC Evolution, e por isso n\u00e3o ser\u00e3o considerados"
+        )
+
+    # Gera a tabela de produtos para o PDF
+    linhas_pdf = []
+    linhas_pdf.append((f"Plano {resultado['nome']}", 1, resultado['preco_base'], resultado['preco_base']))
+    if resultado['custo_extra_utilizadores'] > 0:
+        unit = resultado['custo_extra_utilizadores'] / resultado['extras_utilizadores']
+        linhas_pdf.append(("Full Users adicionais", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
+    for modulo, custos in resultado['modulos_detalhe'].items():
+        qtd = selecoes.get(modulo, 1)
+        total = sum(custos)
+        unit = total / qtd if qtd else total
+        linhas_pdf.append((modulo, qtd, unit, total))
+
+    pdf_bytes = gerar_pdf(linhas_pdf)
+    st.download_button(
+        "Descarregar Or\u00e7amento (PDF)",
+        data=pdf_bytes,
+        file_name="orcamento.pdf",
+        mime="application/pdf",
+    )

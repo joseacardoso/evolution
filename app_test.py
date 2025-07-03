@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+
+__test__ = False
 import unicodedata
 from io import StringIO
 from common import calculate_plan, format_euro, produtos, setup_page
@@ -34,6 +36,7 @@ extras_planos = {
     "genai": 2,
 }
 extras_importados = set()
+manuf_count = 0
 
 if texto_tabela:
     try:
@@ -71,24 +74,50 @@ if texto_tabela:
             .astype(int)
         )
 
+        manuf_count = 0
         if "Produto3" in df_import.columns:
-            df_import = df_import[~df_import["Produto3"].str.contains("Manufactor", case=False, na=False)]
+            mask_manuf = df_import["Produto3"].str.contains("Manufactor", case=False, na=False)
+            manuf_count = mask_manuf.sum()
+            df_import = df_import[~mask_manuf]
 
         if "Designação" in df_import.columns:
             df_import["Designação"] = df_import["Designação"].astype(str)
         else:
             df_import["Designação"] = ""
+
+        sub_col = None
+        for c in ["Produto2", "Subproduto"]:
+            if c in df_import.columns:
+                sub_col = c
+                break
+
         tot_por_produto = {}
         rede_por_produto = {}
+        inventario_flag = False
+        inv_subs = {
+            "equipamentos",
+            "lotes",
+            "grelhas",
+            "localizações",
+            "localizacoes",
+            "ocupação",
+            "ocupacao",
+            "terminais",
+            "serviços",
+            "servicos",
+            "obras",
+        }
 
         for _, row in df_import.iterrows():
-            modulo_raw = str(row["Produto"]).strip()
+            modulo_raw = str(row.get(sub_col, row["Produto"])).strip()
             quantidade = int(row["Quantidade"])
             designacao = str(row.get("Designação", "")).lower()
 
             tot_por_produto[modulo_raw] = tot_por_produto.get(modulo_raw, 0) + quantidade
             if "rede" in designacao:
                 rede_por_produto[modulo_raw] = rede_por_produto.get(modulo_raw, 0) + quantidade
+            if sub_col and str(row.get(sub_col, "")).strip().lower() in inv_subs:
+                inventario_flag = True
 
         df_import = pd.DataFrame(
             {
@@ -97,6 +126,9 @@ if texto_tabela:
                 "Rede": [rede_por_produto.get(p, 0) for p in tot_por_produto],
             }
         )
+
+        if inventario_flag:
+            import_data["Inventário Avançado"] = 1
 
         nome_map = {
             "careers": "Careers c/ Recrutamento",
@@ -107,6 +139,11 @@ if texto_tabela:
             "genai": "GenAI",
             "formacao": "Formação",
             "imoveis": "Imóveis",
+            "orcamento": "Orçamentação",
+            "medicao": "Orçamentação + Medição",
+            "controlo": "Orçamentação + Medição + Controlo",
+            "planeamento": "Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços",
+            "revisao": "Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços",
         }
 
         modulos_validos = [m for area in produtos.values() for m in area]
@@ -308,4 +345,8 @@ if st.button("Calcular Plano Recomendado"):
         st.markdown(
             "<p style='color:#000000;'>O cliente tinha GenAI e vai evoluir para Cegid Pulse.</p>",
             unsafe_allow_html=True,
+        )
+    if manuf_count > 0:
+        st.info(
+            "O Cegid PHC CS Manufactor n\u00e3o estar\u00e1 dispon\u00edvel no Cegid PHC Evolution, e por isso n\u00e3o ser\u00e1 considerado"
         )

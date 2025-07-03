@@ -20,28 +20,48 @@ def normalize(text: str) -> str:
 def gerar_pdf(linhas: list[tuple[str, int, float, float]]) -> bytes:
     """Create a simple PDF with a table of products."""
     from fpdf import FPDF
+    from pathlib import Path
 
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+
+    fonts_dir = Path("fonts")
+    font_regular = fonts_dir / "segoeui.ttf"
+    font_bold = fonts_dir / "segoeuib.ttf"
+    font_name = "Arial"
+    if font_regular.exists():
+        font_name = "SegoeUI"
+        pdf.add_font(font_name, "", str(font_regular), uni=True)
+        if font_bold.exists():
+            pdf.add_font(font_name, "B", str(font_bold), uni=True)
+
+    pdf.set_font(font_name, size=12)
     pdf.cell(0, 10, "Proposta interna Cegid PHC Evolution", ln=True, align="C")
     pdf.ln(5)
 
     colw = [80, 20, 40, 40]
     headers = ["Produto", "Qtd", "Valor Unit.", "Total"]
-    pdf.set_font("Arial", size=10)
+    pdf.set_font(font_name, "B", 10)
     for w, h in zip(colw, headers):
         pdf.cell(w, 8, h, border=1, align="C")
     pdf.ln()
+    pdf.set_font(font_name, size=10)
 
     for prod, qtd, unit, total in linhas:
-        pdf.cell(colw[0], 8, str(prod), border=1)
-        pdf.cell(colw[1], 8, str(qtd), border=1, align="C")
-        pdf.cell(colw[2], 8, format_euro(unit, pdf=True), border=1, align="R")
-        pdf.cell(colw[3], 8, format_euro(total, pdf=True), border=1, align="R")
-        pdf.ln()
+        start_x = pdf.get_x()
+        start_y = pdf.get_y()
+
+        pdf.multi_cell(colw[0], 8, str(prod), border=1)
+        row_height = pdf.get_y() - start_y
+
+        pdf.set_xy(start_x + colw[0], start_y)
+        pdf.cell(colw[1], row_height, str(qtd), border=1, align="C")
+        pdf.cell(colw[2], row_height, format_euro(unit, pdf=True), border=1, align="R")
+        pdf.cell(colw[3], row_height, format_euro(total, pdf=True), border=1, align="R")
+        pdf.ln(row_height)
 
     valor_total = sum(t for _, _, _, t in linhas)
+    pdf.set_font(font_name, "B", 10)
     pdf.cell(colw[0] + colw[1] + colw[2], 8, "Total", border=1)
     pdf.cell(colw[3], 8, format_euro(valor_total, pdf=True), border=1, align="R")
 

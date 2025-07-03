@@ -4,11 +4,10 @@ import pandas as pd
 __test__ = False
 import unicodedata
 from io import StringIO
-from common import calculate_plan, format_euro, produtos, setup_page
+from common import calculate_plan, format_euro, produtos, LOGO
 
 st.set_page_config(layout="centered")
-dark_mode = st.sidebar.checkbox("Modo Escuro")
-setup_page(dark=dark_mode)
+st.markdown(LOGO, unsafe_allow_html=True)
 
 
 def normalize(text: str) -> str:
@@ -30,7 +29,7 @@ def gerar_pdf(linhas: list[tuple[str, int, float, float]]) -> bytes:
 
     colw = [80, 20, 40, 40]
     headers = ["Produto", "Qtd", "Valor Unit.", "Total"]
-    pdf.set_font(size=10)
+    pdf.set_font("Arial", size=10)
     for w, h in zip(colw, headers):
         pdf.cell(w, 8, h, border=1, align="C")
     pdf.ln()

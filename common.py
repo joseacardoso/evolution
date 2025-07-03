@@ -240,6 +240,8 @@ def calculate_plan(
         "custo_estimado": custo_estimado,
         "extras_utilizadores": extras,
         "custo_extra_utilizadores": custo_extra_utilizadores,
+        "extras_breakdown": (grupo1, grupo2, grupo3),
+        "precos_extras": (preco_ate_10, preco_ate_50, preco_mais_50),
         "modulos_detalhe": modulos_detalhe,
         "plano_final": plano_final,
         "bancos_base": bancos_base,

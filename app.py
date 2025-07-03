@@ -76,13 +76,41 @@ if st.button("Calcular Plano Recomendado"):
     detalhes = []
     detalhes.append(("Preço do Plano Base", format_euro(resultado["preco_base"]), False))
     if resultado["custo_extra_utilizadores"] > 0:
-        detalhes.append(
-            (
-                f"Preço dos {resultado['extras_utilizadores']} Full Users adicionais",
-                format_euro(resultado["custo_extra_utilizadores"]),
-                True,
+        if resultado["plano_final"] == 6:
+            g1, g2, g3 = resultado["extras_breakdown"]
+            p1, p2, p3 = resultado["precos_extras"]
+            if g1:
+                detalhes.append(
+                    (
+                        f"Preço dos {g1} Full Users (6 a 10)",
+                        format_euro(g1 * p1),
+                        True,
+                    )
+                )
+            if g2:
+                detalhes.append(
+                    (
+                        f"Preço dos {g2} Full Users (11 a 50)",
+                        format_euro(g2 * p2),
+                        True,
+                    )
+                )
+            if g3:
+                detalhes.append(
+                    (
+                        f"Preço dos {g3} Full Users (>50)",
+                        format_euro(g3 * p3),
+                        True,
+                    )
+                )
+        else:
+            detalhes.append(
+                (
+                    f"Preço dos {resultado['extras_utilizadores']} Full Users adicionais",
+                    format_euro(resultado["custo_extra_utilizadores"]),
+                    True,
+                )
             )
-        )
 
     for modulo, custos in resultado["modulos_detalhe"].items():
         custo_base, custo_extra = custos

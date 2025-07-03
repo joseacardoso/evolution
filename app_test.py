@@ -1,8 +1,16 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import unicodedata
 from io import StringIO
 import os
+
+
+def normalize(text: str) -> str:
+    """Return lowercase text without accents."""
+    return "".join(
+        c for c in unicodedata.normalize("NFD", str(text)) if unicodedata.category(c) != "Mn"
+    ).lower()
 
 # Força tema claro no Streamlit
 st.set_page_config(layout="centered")
@@ -29,49 +37,9 @@ st.markdown("""
             color: #000000 !important;
             font-weight: 500 !important;
             opacity: 1 !important;
-        }
+@@ -73,217 +81,466 @@ st.markdown("""
 
-        .stSelectbox div[data-baseweb],
-        .stNumberInput input,
-        .stSelectbox [data-baseweb="select"] > div {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-
-        .stNumberInput button {
-            background-color: #FF5C35 !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            border-radius: 4px !important;
-        }
-
-        .stButton>button {
-            background-color: #FF5C35 !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 0.4em 1.2em !important;
-            font-weight: bold !important;
-            font-size: 1rem !important;
-            display: block;
-            margin: 1.2em auto 1em auto !important;
-            width: auto;
-            max-width: 240px;
-            white-space: nowrap !important;
-            line-height: 1.2 !important;
-        }
-
-        .stButton>button:hover {
-            background-color: #cc4829 !important;
-            color: #FFFFFF !important;
-            transition: background-color 0.3s ease;
-        }
-
-        .stButton button * {
-            color: #FFFFFF !important;
-        }
-
-           .stSuccess {
+        .stSuccess {
             background-color: #c9cfd3 !important;
             border-left: 6px solid #0046FE !important;
             color: #000000 !important;
@@ -100,6 +68,8 @@ produtos = {
         "Frota": {"plano": 3, "per_user": False},
         "Logística": {"plano": 5, "per_user": False},
         "Denúncias": {"plano": 5, "per_user": False},
+        "Documentos": {"plano": 3, "per_user": False},
+        "GenAI": {"plano": 2, "per_user": False},
         "CRM": {"plano": 3, "per_user": True},
         "BPM": {"plano": 5, "per_user": False},
         "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
@@ -111,6 +81,8 @@ produtos = {
         "Colaborador": {"plano": 5, "per_user": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
         "OKR": {"plano": 4, "per_user": True},
+        "Formação": {"plano": 3, "per_user": False},
+        "Imóveis": {"plano": 3, "per_user": False},
     },
     "Outros": {
         "Suporte": {"plano": 2, "per_user": True},
@@ -141,7 +113,12 @@ with st.expander("Importar tabela", expanded=False):
 import_data = {}
 utilizadores_importados = None
 plano_importado = 0  # 0=Corporate,1=Advanced,2=Enterprise
-extras_planos = {"intrastat": 4, "rgpd": 3}
+extras_planos = {
+    "intrastat": 4,
+    "rgpd": 3,
+    "documentos": 3,
+    "genai": 2,
+}
 extras_importados = set()
 
 if texto_tabela:
@@ -211,6 +188,11 @@ if texto_tabela:
             "careers": "Careers c/ Recrutamento",
             "imobilizado": "Ativos",
             "vencimentos": "Vencimento",
+            "denuncias": "Denúncias",
+            "documentos": "Documentos",
+            "genai": "GenAI",
+            "formacao": "Formação",
+            "imoveis": "Imóveis",
         }
 
         modulos_validos = [m for area in produtos.values() for m in area]
@@ -220,13 +202,16 @@ if texto_tabela:
             "doc.eletronicos",
         }
 
+        projeto_partes = set()
+        projeto_qtd = 0
+
         for _, row in df_import.iterrows():
             modulo = row["Produto"].strip()
             total_mod = int(row["Quantidade"])
             rede_mod = int(row.get("Rede", 0))
             quantidade = max(0, total_mod - rede_mod)
-            modulo_lower = modulo.lower()
-            if modulo_lower in ["gest\u00e3o", "gestao"]:
+            modulo_lower = normalize(modulo)
+            if modulo_lower in ["gestao", "gestão"]:
                 utilizadores_importados = total_mod
                 continue
             if modulo_lower in modulos_ignorados:
@@ -237,7 +222,45 @@ if texto_tabela:
             elif modulo_lower in extras_planos:
                 extras_importados.add(modulo_lower)
             else:
-                st.warning(f"M\u00f3dulo n\u00e3o reconhecido: {modulo}")
+                # captura de modulos antigos de projeto
+                if "full project" in modulo_lower or modulo_lower == "projeto":
+                    projeto_partes.update([
+                        "orcamentacao",
+                        "medicao",
+                        "controlo",
+                        "planeamento",
+                        "revisao",
+                    ])
+                    projeto_qtd = max(projeto_qtd, quantidade)
+                elif any(k in modulo_lower for k in ["orcament", "medic", "control", "plane", "revisa"]):
+                    if "plane" in modulo_lower:
+                        projeto_partes.add("planeamento")
+                    if "revisa" in modulo_lower:
+                        projeto_partes.add("revisao")
+                    if "control" in modulo_lower:
+                        projeto_partes.add("controlo")
+                    if "medic" in modulo_lower:
+                        projeto_partes.add("medicao")
+                    if "orcament" in modulo_lower:
+                        projeto_partes.add("orcamentacao")
+                    projeto_qtd = max(projeto_qtd, quantidade)
+                else:
+                    st.warning(f"M\u00f3dulo n\u00e3o reconhecido: {modulo}")
+
+        projeto_modulos_novos = set(produtos["Projeto"].keys())
+        if not any(m in import_data for m in projeto_modulos_novos):
+            destino = None
+            if projeto_partes:
+                if "planeamento" in projeto_partes or "revisao" in projeto_partes or len(projeto_partes) >= 4:
+                    destino = "Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços"
+                elif "controlo" in projeto_partes and ("orcamentacao" in projeto_partes or "medicao" in projeto_partes):
+                    destino = "Orçamentação + Medição + Controlo"
+                elif "medicao" in projeto_partes:
+                    destino = "Orçamentação + Medição"
+                elif "orcamentacao" in projeto_partes:
+                    destino = "Orçamentação"
+            if destino:
+                import_data[destino] = projeto_qtd if projeto_qtd else 1
 
 plano_atual = st.selectbox(
     "Plano Atual",
@@ -475,3 +498,9 @@ if st.button("Calcular Plano Recomendado"):
                 f"<p style='color:#000000;'>Bank Connector inclui {bancos_base} banco(s) base.</p>",
                 unsafe_allow_html=True,
             )
+
+    if "genai" in extras_importados:
+        st.markdown(
+            "<p style='color:#000000;'>O cliente tinha GenAI e vai evoluir para Cegid Pulse.</p>",
+            unsafe_allow_html=True,
+        )

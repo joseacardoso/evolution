@@ -26,3 +26,7 @@ two logo files there:
 
 The application will automatically pick the correct image depending on the theme
 selected in Streamlit.
+
+## Fonts
+
+Create a folder named `fonts_dir` in the repository root and copy the `segoeui.ttf` and `segoeuib.ttf` files into it. These fonts are used when generating PDFs.

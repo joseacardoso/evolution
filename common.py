@@ -8,9 +8,17 @@ with open("style.css", encoding="utf-8") as f:
 with open("style_dark.css", encoding="utf-8") as f:
     STYLE_DARK = f.read()
 
-LOGO = """
+IMAGES_DIR = "images"
+
+LOGO_LIGHT = f"""
     <div class="logo-container">
-        <img src="https://phcsoftware.com/pt/wp-content/uploads/sites/3/2023/11/logo.svg" width="220" />
+        <img src="{IMAGES_DIR}/PHC Evolution.svg" width="220" />
+    </div>
+"""
+
+LOGO_DARK = f"""
+    <div class="logo-container">
+        <img src="{IMAGES_DIR}/PHC Evolution_white.svg" width="220" />
     </div>
 """
 
@@ -72,8 +80,9 @@ produtos = {
 def setup_page(dark: bool = False) -> None:
     """Apply common Streamlit styling and logo."""
     style = STYLE_DARK if dark else STYLE_LIGHT
+    logo = LOGO_DARK if dark else LOGO_LIGHT
     st.markdown(style, unsafe_allow_html=True)
-    st.markdown(LOGO, unsafe_allow_html=True)
+    st.markdown(logo, unsafe_allow_html=True)
 
 
 def format_euro(valor: float) -> str:

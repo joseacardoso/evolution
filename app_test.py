@@ -4,10 +4,10 @@ import pandas as pd
 __test__ = False
 import unicodedata
 from io import StringIO
-from common import calculate_plan, format_euro, produtos, LOGO
+from common import calculate_plan, format_euro, produtos, setup_page
 
 st.set_page_config(layout="centered")
-st.markdown(LOGO, unsafe_allow_html=True)
+setup_page(dark=st.get_option("theme.base") == "dark")
 
 
 def normalize(text: str) -> str:

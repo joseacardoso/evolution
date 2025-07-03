@@ -83,10 +83,10 @@ def setup_page(dark: bool = False) -> None:
 def format_euro(valor: float, *, pdf: bool = False) -> str:
     """Return ``valor`` formatted in euros.
 
-    When ``pdf`` is ``True`` the Euro symbol is encoded using the
-    Windows‑1252 code point (``chr(128)``) so that the bundled ``fpdf``
-    library can render it correctly.  For normal UI display the standard
-    Unicode Euro sign is used.
+    By default the function uses the Unicode Euro sign.  When
+    ``pdf`` is ``True`` the symbol is encoded as the Windows‑1252
+    code point (``chr(128)``) so that it can be rendered correctly
+    even when using the bundled ``fpdf`` standard fonts.
     """
 
     euro_symbol = chr(128) if pdf else "€"

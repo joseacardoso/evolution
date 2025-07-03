@@ -35,12 +35,14 @@ else:
         fonts_dir = Path("fonts_dir")
         font_regular = fonts_dir / "segoeui.ttf"
         font_bold = fonts_dir / "segoeuib.ttf"
-        font_name = "Arial"
-        if font_regular.exists():
+        use_custom = False
+        font_name = "Helvetica"
+        if font_regular.exists() and font_regular.stat().st_size > 100000:
             font_name = "SegoeUI"
             pdf.add_font(font_name, "", str(font_regular), uni=True)
-            if font_bold.exists():
+            if font_bold.exists() and font_bold.stat().st_size > 100000:
                 pdf.add_font(font_name, "B", str(font_bold), uni=True)
+            use_custom = True
     
         pdf.set_font(font_name, size=12)
         pdf.cell(0, 10, "Proposta interna Cegid PHC Evolution", ln=True, align="C")
@@ -63,14 +65,14 @@ else:
     
             pdf.set_xy(start_x + colw[0], start_y)
             pdf.cell(colw[1], row_height, str(qtd), border=1, align="C")
-            pdf.cell(colw[2], row_height, format_euro(unit, pdf=True), border=1, align="R")
-            pdf.cell(colw[3], row_height, format_euro(total, pdf=True), border=1, align="R")
+            pdf.cell(colw[2], row_height, format_euro(unit, pdf=not use_custom), border=1, align="R")
+            pdf.cell(colw[3], row_height, format_euro(total, pdf=not use_custom), border=1, align="R")
             pdf.ln(row_height)
     
         valor_total = sum(t for _, _, _, t in linhas)
         pdf.set_font(font_name, "B", 10)
         pdf.cell(colw[0] + colw[1] + colw[2], 8, "Total", border=1)
-        pdf.cell(colw[3], 8, format_euro(valor_total, pdf=True), border=1, align="R")
+        pdf.cell(colw[3], 8, format_euro(valor_total, pdf=not use_custom), border=1, align="R")
     
         return pdf.output(dest="S").encode("latin-1")
     

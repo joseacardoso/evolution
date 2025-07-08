@@ -202,7 +202,7 @@ else:
     
             nome_map = {
                 "careers": "Careers c/ Recrutamento",
-                "imobilizado": "Ativos",
+                "imobilizado": "Imobilizado",
                 "vencimentos": "Vencimento",
                 "denuncias": "Denúncias",
                 "documentos": "Documentos",

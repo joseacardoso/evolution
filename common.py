@@ -39,7 +39,7 @@ produtos = {
     },
     "Área Financeira e Recursos Humanos": {
         "Contabilidade": {"plano": 3, "per_user": True},
-        "Ativos": {"plano": 3, "per_user": True},
+        "Imobilizado": {"plano": 3, "per_user": True},
         "Vencimento": {"plano": 3, "per_user": True},
         "Colaborador": {"plano": 5, "per_user": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},

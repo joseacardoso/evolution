@@ -140,12 +140,10 @@ Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão d
 Bank Connector,4,0,0
 Bank Connector,5,0,0
 Bank Connector,6,0,0
-EDI Broker,1,0,0
-EDI Broker,2,0,0
-EDI Broker,3,0,0
-EDI Broker,4,0,0
-EDI Broker,5,0,0
-EDI Broker,6,0,0
+EDI Broker,3,249,0
+EDI Broker,4,499,0
+EDI Broker,5,499,0
+EDI Broker,6,999,0
 Formação,1,0,0
 Formação,2,0,0
 Formação,3,0,0

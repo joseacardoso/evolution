@@ -199,7 +199,20 @@ else:
     
             if inventario_flag:
                 import_data["Inventário Avançado"] = 1
-    
+
+            web_mask = False
+            if "Designação" in df_import.columns:
+                web_mask = web_mask or df_import["Designação"].str.contains(
+                    "web|intranet", case=False, na=False
+                ).any()
+            if "Produto3" in df_import.columns:
+                web_mask = web_mask or df_import["Produto3"].astype(str).str.contains(
+                    "web|intranet", case=False, na=False
+                ).any()
+
+            if web_mask:
+                import_data["Documentos"] = max(import_data.get("Documentos", 0), 1)
+
             nome_map = {
                 "careers": "Careers c/ Recrutamento",
                 "imobilizado": "Imobilizado",
@@ -208,6 +221,8 @@ else:
                 "documentos": "Documentos",
                 "documentos intranet": "Documentos",
                 "documentosintranet": "Documentos",
+                "doceletrointranet": "Documentos",
+                "doc eletro intranet": "Documentos",
                 "genai": "GenAI",
                 "formacao": "Formação",
                 "imoveis": "Imóveis",
@@ -215,6 +230,8 @@ else:
                 "terminais portáteis": "Inventário Avançado",
                 "suporte extranet": "Suporte",
                 "suporteextranet": "Suporte",
+                "suporteintranet": "Suporte",
+                "suporte intranet": "Suporte",
                 "orcamento": "Orçamentação",
                 "medicao": "Orçamentação + Medição",
                 "controlo": "Orçamentação + Medição + Controlo",

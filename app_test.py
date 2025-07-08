@@ -383,7 +383,7 @@ else:
                 if escolha != "Nenhum":
                     info = modulos[escolha]
                     if info.get("per_user"):
-                        quantidade_padrao = import_data.get(escolha, 1)
+                        quantidade_padrao = max(1, import_data.get(escolha, 1))
                         selecoes[escolha] = st.number_input(
                             f"Nº Utilizadores - {escolha}",
                             min_value=1,
@@ -410,7 +410,7 @@ else:
                             )
                     elif ativado:
                         if info.get("per_user"):
-                            quantidade_padrao = import_data.get(modulo, 1)
+                            quantidade_padrao = max(1, import_data.get(modulo, 1))
                             selecoes[modulo] = st.number_input(
                                 f"Nº Utilizadores - {modulo}",
                                 min_value=1,

@@ -28,6 +28,7 @@ def load_precos_produtos() -> pd.DataFrame:
 produtos = {
     "Core e Transversais": {
         "Inventário Avançado": {"plano": 3, "per_user": False},
+        "Ocupação": {"plano": 3, "per_user": False},
         "Frota": {"plano": 3, "per_user": False},
         "Logística": {"plano": 5, "per_user": False},
         "Denúncias": {"plano": 5, "per_user": False},
@@ -41,6 +42,7 @@ produtos = {
         "Contabilidade": {"plano": 3, "per_user": True},
         "Imobilizado": {"plano": 3, "per_user": True},
         "Vencimento": {"plano": 3, "per_user": True},
+        "SHST": {"plano": 3, "per_user": True},
         "Colaborador": {"plano": 5, "per_user": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
         "OKR": {"plano": 4, "per_user": True},
@@ -150,6 +152,10 @@ def calculate_plan(
 
     if "Colaborador" in selecoes and "Vencimento" not in selecoes:
         warnings.append("O módulo Colaborador requer Vencimento")
+    if "SHST" in selecoes and "Vencimento" not in selecoes:
+        warnings.append("O módulo SHST requer Vencimento")
+    if "Ocupação" in selecoes and "Inventário Avançado" not in selecoes:
+        warnings.append("O módulo Ocupação faz parte do Inventário Avançado")
 
     plano_final = max(planos) if planos else 1
 

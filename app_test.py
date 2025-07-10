@@ -164,6 +164,7 @@ else:
             inventario_flag = False
             inv_subs = {
                 "equipamentos",
+                "equipamento",
                 "lotes",
                 "grelhas",
                 "localizações",
@@ -231,11 +232,14 @@ else:
                 "documentosintranet": "Documentos",
                 "doceletrointranet": "Documentos",
                 "doc eletro intranet": "Documentos",
+                "documentosextranet": "Documentos",
+                "documentos extranet": "Documentos",
                 "genai": "GenAI",
                 "formacao": "Formação",
                 "imoveis": "Imóveis",
                 "terminais portateis": "Inventário Avançado",
                 "terminais portáteis": "Inventário Avançado",
+                "equipamento": "Inventário Avançado",
                 "suporte extranet": "Suporte",
                 "suporteextranet": "Suporte",
                 "suporteintranet": "Suporte",

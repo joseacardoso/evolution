@@ -101,12 +101,14 @@ def calculate_plan(
     tipo_gestao: str | None,
     utilizadores: int,
     selecoes: dict[str, int],
+    web_selecoes: dict[str, int] | None = None,
     extras_importados: set[str] | None = None,
     extras_planos: dict[str, int] | None = None,
 ) -> dict:
     """Return planning information based on selections."""
     extras_importados = extras_importados or set()
     extras_planos = extras_planos or {}
+    web_selecoes = web_selecoes or {}
     warnings: list[str] = []
 
     planos = []
@@ -204,7 +206,7 @@ def calculate_plan(
             custo_extra_utilizadores = grupo1 * preco_ate_10
 
     custo_modulos = 0
-    modulos_detalhe: dict[str, tuple[float, float]] = {}
+    modulos_detalhe: dict[str, tuple[float, float, float, int, int]] = {}
     for modulo, quantidade in selecoes.items():
         if modulo == "Ponto de Venda (POS/Restauração)":
             preco_primeiro = preco_produtos.get(("POS (1º)", plano_final), (0, 0))[0]
@@ -217,17 +219,39 @@ def calculate_plan(
                 acima_10 = max(restantes - 9, 0)
                 custo_base = preco_primeiro
                 custo_extra = ate_10 * preco_2_10 + acima_10 * preco_maior_10
+                qtd_desk = ate_10 + acima_10
             else:
                 custo_base = 0
                 custo_extra = 0
+                qtd_desk = 0
+            qtd_web = 0
+            custo_extra_desk = custo_extra
+            custo_extra_web = 0
         else:
             base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
             custo_base = base
-            custo_extra = unidade * quantidade if unidade else 0
+            if unidade and quantidade > 0:
+                web_total = web_selecoes.get(modulo, 0)
+                web_paid = max(0, min(web_total - 1, quantidade))
+                desk_paid = max(0, quantidade - web_paid)
+                custo_extra_desk = desk_paid * unidade
+                custo_extra_web = web_paid * unidade
+                qtd_desk = desk_paid
+                qtd_web = web_paid
+            else:
+                custo_extra_desk = custo_extra_web = 0
+                qtd_desk = qtd_web = 0
 
+        custo_extra = custo_extra_desk + custo_extra_web
         if custo_base or custo_extra:
             custo_modulos += custo_base + custo_extra
-            modulos_detalhe[modulo] = (custo_base, custo_extra)
+            modulos_detalhe[modulo] = (
+                custo_base,
+                custo_extra_desk,
+                custo_extra_web,
+                qtd_desk,
+                qtd_web,
+            )
 
     custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
 

@@ -443,6 +443,7 @@ else:
             tipo_gestao,
             utilizadores,
             selecoes,
+            {},
             extras_importados,
             extras_planos,
         )
@@ -495,11 +496,23 @@ else:
                 )
     
         for modulo, custos in resultado["modulos_detalhe"].items():
-            custo_base, custo_extra = custos
+            custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
             detalhes.append((modulo, format_euro(custo_base), False))
-            if custo_extra > 0:
+            if custo_desk > 0:
                 detalhes.append(
-                    (f"{modulo} (Utilizadores Adicionais)", format_euro(custo_extra), True)
+                    (
+                        f"{modulo} ({qtd_desk} Utilizadores Adicionais Desktop)",
+                        format_euro(custo_desk),
+                        True,
+                    )
+                )
+            if custo_web > 0:
+                detalhes.append(
+                    (
+                        f"{modulo} ({qtd_web} Utilizadores Adicionais Web)",
+                        format_euro(custo_web),
+                        True,
+                    )
                 )
     
         for texto, valor, indent in detalhes:
@@ -549,16 +562,30 @@ else:
                 linhas_pdf.append(("  Full Users adicionais", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
     
         for modulo, custos in resultado['modulos_detalhe'].items():
-            qtd = selecoes.get(modulo, 1)
-            custo_base, custo_extra = custos
-    
-            # linha do produto propriamente dito
+            custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
+
             linhas_pdf.append((modulo, 1, custo_base, custo_base))
-    
-            # linha adicional com utilizadores (se existir)
-            if custo_extra > 0:
-                unit_extra = custo_extra / qtd if qtd else custo_extra
-                linhas_pdf.append((f"  {modulo} (Utilizadores Adicionais)", qtd, unit_extra, custo_extra))
+
+            if custo_desk > 0:
+                unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
+                linhas_pdf.append(
+                    (
+                        f"  {modulo} ({qtd_desk} Utilizadores Adicionais Desktop)",
+                        qtd_desk,
+                        unit_extra,
+                        custo_desk,
+                    )
+                )
+            if custo_web > 0:
+                unit_extra = custo_web / qtd_web if qtd_web else custo_web
+                linhas_pdf.append(
+                    (
+                        f"  {modulo} ({qtd_web} Utilizadores Adicionais Web)",
+                        qtd_web,
+                        unit_extra,
+                        custo_web,
+                    )
+                )
     
         pdf_bytes = gerar_pdf(linhas_pdf)
         st.download_button(

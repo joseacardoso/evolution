@@ -113,11 +113,23 @@ if st.button("Calcular Plano Recomendado"):
             )
 
     for modulo, custos in resultado["modulos_detalhe"].items():
-        custo_base, custo_extra = custos
+        custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
         detalhes.append((modulo, format_euro(custo_base), False))
-        if custo_extra > 0:
+        if custo_desk > 0:
             detalhes.append(
-                (f"{modulo} (Utilizadores Adicionais)", format_euro(custo_extra), True)
+                (
+                    f"{modulo} ({qtd_desk} Utilizadores Adicionais Desktop)",
+                    format_euro(custo_desk),
+                    True,
+                )
+            )
+        if custo_web > 0:
+            detalhes.append(
+                (
+                    f"{modulo} ({qtd_web} Utilizadores Adicionais Web)",
+                    format_euro(custo_web),
+                    True,
+                )
             )
 
     for texto, valor, indent in detalhes:

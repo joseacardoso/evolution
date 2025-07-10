@@ -76,5 +76,11 @@ def test_module_costs(common):
     expected_module_base = base
     expected_module_extra = unit * 3
     expected_total = float(plan["preco_base"]) + expected_module_base + expected_module_extra
-    assert result["modulos_detalhe"]["CRM"] == (expected_module_base, expected_module_extra)
+    assert result["modulos_detalhe"]["CRM"] == (
+        expected_module_base,
+        expected_module_extra,
+        0,
+        3,
+        0,
+    )
     assert result["custo_estimado"] == expected_total

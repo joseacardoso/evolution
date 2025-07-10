@@ -161,6 +161,7 @@ else:
     
             tot_por_produto = {}
             rede_por_produto = {}
+            web_por_produto = {}
             inventario_flag = False
             inv_subs = {
                 "equipamentos",
@@ -183,10 +184,13 @@ else:
                 modulo_raw = str(row.get(sub_col, row["Produto"])).strip()
                 quantidade = int(row["Quantidade"])
                 designacao = str(row.get("Designação", "")).lower()
-    
+
                 tot_por_produto[modulo_raw] = tot_por_produto.get(modulo_raw, 0) + quantidade
                 if "rede" in designacao:
                     rede_por_produto[modulo_raw] = rede_por_produto.get(modulo_raw, 0) + quantidade
+                prod3 = str(row.get("Produto3", "")).lower()
+                if "web" in designacao or "intranet" in designacao or "web" in prod3 or "intranet" in prod3:
+                    web_por_produto[modulo_raw] = web_por_produto.get(modulo_raw, 0) + quantidade
                 if sub_col and str(row.get(sub_col, "")).strip().lower() in inv_subs:
                     inventario_flag = True
     
@@ -195,6 +199,7 @@ else:
                     "Produto": list(tot_por_produto.keys()),
                     "Quantidade": [tot_por_produto[p] for p in tot_por_produto],
                     "Rede": [rede_por_produto.get(p, 0) for p in tot_por_produto],
+                    "Web": [web_por_produto.get(p, 0) for p in tot_por_produto],
                 }
             )
     
@@ -278,7 +283,13 @@ else:
                 modulo = row["Produto"].strip()
                 total_mod = int(row["Quantidade"])
                 rede_mod = int(row.get("Rede", 0))
+                web_mod = int(row.get("Web", 0))
                 quantidade = max(0, total_mod - rede_mod)
+                desktop_count = max(0, quantidade - web_mod)
+                if web_mod:
+                    quantidade = desktop_count + max(0, web_mod - 1)
+                else:
+                    quantidade = desktop_count
                 modulo_lower = normalize(modulo)
                 if modulo_lower in ["gestao", "gestão"]:
                     utilizadores_importados = total_mod

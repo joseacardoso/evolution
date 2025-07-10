@@ -92,6 +92,7 @@ else:
         )
     
     import_data = {}
+    web_data = {}
     utilizadores_importados = None
     plano_importado = 0  # 0=Corporate,1=Advanced,2=Enterprise
     extras_planos = {
@@ -317,6 +318,8 @@ else:
                 modulo_nome = nome_map.get(modulo_lower, modulo)
                 if modulo_nome in modulos_validos:
                     import_data[modulo_nome] = quantidade
+                    if web_mod:
+                        web_data[modulo_nome] = web_mod
                 elif modulo_lower in extras_planos:
                     extras_importados.add(modulo_lower)
                 else:
@@ -443,7 +446,7 @@ else:
             tipo_gestao,
             utilizadores,
             selecoes,
-            {},
+            web_data,
             extras_importados,
             extras_planos,
         )

@@ -84,3 +84,21 @@ def test_module_costs(common):
         0,
     )
     assert result["custo_estimado"] == expected_total
+
+
+def test_web_module_allocation(common):
+    result = common.calculate_plan(
+        "Enterprise",
+        None,
+        5,
+        {"CRM": 12},
+        {"CRM": 4},
+    )
+    unit = float(read_module_row("CRM", 6)["preco_unidade"])
+    assert result["modulos_detalhe"]["CRM"] == (
+        0,
+        unit * 9,
+        unit * 3,
+        9,
+        3,
+    )

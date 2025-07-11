@@ -77,6 +77,16 @@ WEB_MODULES = {
 
 WEB_ONLY_MODULES = {"Colaborador"}
 
+# Maximum number of POS stations allowed per plan
+POS_LIMITS = {
+    1: 1,   # Essentials
+    2: 2,   # Standard
+    3: 5,   # Plus
+    4: 10,  # Advanced
+    5: 50,  # Premium
+    6: None,  # Ultimate has no limit
+}
+
 
 def setup_page(dark: bool = False) -> None:
     """Apply common Streamlit styling and logo."""
@@ -153,6 +163,15 @@ def calculate_plan(
         plano_utilizadores = max(pid for pid, _ in limites)
 
     planos.append(plano_utilizadores)
+
+    # Adjust plan based on number of POS stations
+    pos_qtd = selecoes.get("Ponto de Venda (POS/Restauração)", 0)
+    if pos_qtd:
+        for pid in sorted(POS_LIMITS):
+            limite = POS_LIMITS[pid]
+            if limite is None or pos_qtd <= limite:
+                planos.append(pid)
+                break
 
     for modulo in selecoes:
         for area in produtos.values():

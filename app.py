@@ -1,6 +1,18 @@
 import streamlit as st
 from common import calculate_plan, format_euro, produtos, setup_page
 
+WEB_MODULES = {
+    "CRM",
+    "Suporte",
+    "Equipa",
+    "Careers c/ Recrutamento",
+    "Vencimento",
+    "Contabilidade",
+    "Imobilizado",
+}
+
+WEB_ONLY_MODULES = {"Colaborador"}
+
 st.set_page_config(layout="centered")
 setup_page(dark=st.get_option("theme.base") == "dark")
 
@@ -38,16 +50,7 @@ for area, modulos in produtos.items():
             if escolha != "Nenhum":
                 info = modulos[escolha]
                 if info.get("per_user"):
-                    cpd, cpw = st.columns(2)
-                    with cpd:
-                        qtd_desk = st.number_input(
-                            f"Nº Utilizadores Desktop - {escolha}",
-                            min_value=0,
-                            step=1,
-                            format="%d",
-                            key=f"{escolha}_desk",
-                        )
-                    with cpw:
+                    if escolha in WEB_ONLY_MODULES:
                         qtd_web = st.number_input(
                             f"Nº Utilizadores Web - {escolha}",
                             min_value=0,
@@ -55,8 +58,36 @@ for area, modulos in produtos.items():
                             format="%d",
                             key=f"{escolha}_web",
                         )
-                    selecoes[escolha] = qtd_desk + qtd_web
-                    web_selecoes[escolha] = qtd_web
+                        selecoes[escolha] = qtd_web
+                        web_selecoes[escolha] = qtd_web
+                    elif escolha in WEB_MODULES:
+                        cpd, cpw = st.columns(2)
+                        with cpd:
+                            qtd_desk = st.number_input(
+                                f"Nº Utilizadores Desktop - {escolha}",
+                                min_value=0,
+                                step=1,
+                                format="%d",
+                                key=f"{escolha}_desk",
+                            )
+                        with cpw:
+                            qtd_web = st.number_input(
+                                f"Nº Utilizadores Web - {escolha}",
+                                min_value=0,
+                                step=1,
+                                format="%d",
+                                key=f"{escolha}_web",
+                            )
+                        selecoes[escolha] = qtd_desk + qtd_web
+                        web_selecoes[escolha] = qtd_web
+                    else:
+                        qtd_desk = st.number_input(
+                            f"Nº Utilizadores - {escolha}",
+                            min_value=0,
+                            step=1,
+                            format="%d",
+                        )
+                        selecoes[escolha] = qtd_desk
                 else:
                     selecoes[escolha] = 1
         else:
@@ -75,16 +106,7 @@ for area, modulos in produtos.items():
                         )
                 elif ativado:
                     if info.get("per_user"):
-                        cd, cw = st.columns(2)
-                        with cd:
-                            qtd_desk = st.number_input(
-                                f"Nº Utilizadores Desktop - {modulo}",
-                                min_value=0,
-                                step=1,
-                                format="%d",
-                                key=f"{modulo}_desk",
-                            )
-                        with cw:
+                        if modulo in WEB_ONLY_MODULES:
                             qtd_web = st.number_input(
                                 f"Nº Utilizadores Web - {modulo}",
                                 min_value=0,
@@ -92,8 +114,36 @@ for area, modulos in produtos.items():
                                 format="%d",
                                 key=f"{modulo}_web",
                             )
-                        selecoes[modulo] = qtd_desk + qtd_web
-                        web_selecoes[modulo] = qtd_web
+                            selecoes[modulo] = qtd_web
+                            web_selecoes[modulo] = qtd_web
+                        elif modulo in WEB_MODULES:
+                            cd, cw = st.columns(2)
+                            with cd:
+                                qtd_desk = st.number_input(
+                                    f"Nº Utilizadores Desktop - {modulo}",
+                                    min_value=0,
+                                    step=1,
+                                    format="%d",
+                                    key=f"{modulo}_desk",
+                                )
+                            with cw:
+                                qtd_web = st.number_input(
+                                    f"Nº Utilizadores Web - {modulo}",
+                                    min_value=0,
+                                    step=1,
+                                    format="%d",
+                                    key=f"{modulo}_web",
+                                )
+                            selecoes[modulo] = qtd_desk + qtd_web
+                            web_selecoes[modulo] = qtd_web
+                        else:
+                            qtd_desk = st.number_input(
+                                f"Nº Utilizadores - {modulo}",
+                                min_value=0,
+                                step=1,
+                                format="%d",
+                            )
+                            selecoes[modulo] = qtd_desk
                     else:
                         selecoes[modulo] = 1
 

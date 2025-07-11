@@ -102,3 +102,21 @@ def test_web_module_allocation(common):
         9,
         3,
     )
+
+
+def test_web_only_module(common):
+    result = common.calculate_plan(
+        "Enterprise",
+        None,
+        5,
+        {"Colaborador": 5},
+        {"Colaborador": 5},
+    )
+    unit = float(read_module_row("Colaborador", 6)["preco_unidade"])
+    assert result["modulos_detalhe"]["Colaborador"] == (
+        0,
+        0,
+        unit * 5,
+        0,
+        5,
+    )

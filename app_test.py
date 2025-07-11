@@ -106,6 +106,13 @@ else:
     extras_importados = set()
     manuf_count = 0
     nao_disponiveis = set()
+    WEB_MODULES = {
+        "CRM",
+        "Suporte",
+        "Equipa",
+        "Colaborador",
+        "Careers c/ Recrutamento",
+    }
     
     if texto_tabela:
         try:
@@ -378,14 +385,24 @@ else:
         )
     
     
-    # Campo para número de utilizadores de Gestão
-    utilizadores = st.number_input(
-        "Nº de Utilizadores de Gestão",
-        min_value=0,
-        step=1,
-        format="%d",
-        value=utilizadores_importados if utilizadores_importados is not None else 0,
-    )
+    # Campos para número de utilizadores de Gestão (Desktop e Web)
+    c1, c2 = st.columns(2)
+    with c1:
+        utilizadores_desk = st.number_input(
+            "Nº Utilizadores Desktop de Gestão",
+            min_value=0,
+            step=1,
+            format="%d",
+            value=utilizadores_importados if utilizadores_importados is not None else 0,
+        )
+    with c2:
+        utilizadores_web = st.number_input(
+            "Nº Utilizadores Web de Gestão",
+            min_value=0,
+            step=1,
+            format="%d",
+        )
+    utilizadores = utilizadores_desk + utilizadores_web
     
     # Captura das seleções
     selecoes = {}
@@ -401,14 +418,39 @@ else:
                 if escolha != "Nenhum":
                     info = modulos[escolha]
                     if info.get("per_user"):
-                        quantidade_padrao = max(1, import_data.get(escolha, 1))
-                        selecoes[escolha] = st.number_input(
-                            f"Nº Utilizadores - {escolha}",
-                            min_value=1,
-                            step=1,
-                            format="%d",
-                            value=quantidade_padrao,
-                        )
+                        if escolha in WEB_MODULES:
+                            def_total = import_data.get(escolha, 0)
+                            def_web = web_data.get(escolha, 0)
+                            def_desk = max(0, def_total - max(0, def_web - 1))
+                            cpd, cpw = st.columns(2)
+                            with cpd:
+                                qtd_desk = st.number_input(
+                                    f"Nº Utilizadores Desktop - {escolha}",
+                                    min_value=0,
+                                    step=1,
+                                    format="%d",
+                                    value=def_desk,
+                                )
+                            with cpw:
+                                qtd_web = st.number_input(
+                                    f"Nº Utilizadores Web - {escolha}",
+                                    min_value=0,
+                                    step=1,
+                                    format="%d",
+                                    value=def_web,
+                                )
+                            selecoes[escolha] = qtd_desk + qtd_web
+                            web_data[escolha] = qtd_web
+                        else:
+                            quantidade_padrao = max(1, import_data.get(escolha, 1))
+                            selecoes[escolha] = st.number_input(
+                                f"Nº Utilizadores - {escolha}",
+                                min_value=1,
+                                step=1,
+                                format="%d",
+                                value=quantidade_padrao,
+                            )
+                            web_data.pop(escolha, None)
                     else:
                         selecoes[escolha] = 1
             else:
@@ -428,14 +470,41 @@ else:
                             )
                     elif ativado:
                         if info.get("per_user"):
-                            quantidade_padrao = max(1, import_data.get(modulo, 1))
-                            selecoes[modulo] = st.number_input(
-                                f"Nº Utilizadores - {modulo}",
-                                min_value=1,
-                                step=1,
-                                format="%d",
-                                value=quantidade_padrao,
-                            )
+                            if modulo in WEB_MODULES:
+                                def_total = import_data.get(modulo, 0)
+                                def_web = web_data.get(modulo, 0)
+                                def_desk = max(0, def_total - max(0, def_web - 1))
+                                cd, cw = st.columns(2)
+                                with cd:
+                                    qtd_desk = st.number_input(
+                                        f"Nº Utilizadores Desktop - {modulo}",
+                                        min_value=0,
+                                        step=1,
+                                        format="%d",
+                                        value=def_desk,
+                                        key=f"{modulo}_desk",
+                                    )
+                                with cw:
+                                    qtd_web = st.number_input(
+                                        f"Nº Utilizadores Web - {modulo}",
+                                        min_value=0,
+                                        step=1,
+                                        format="%d",
+                                        value=def_web,
+                                        key=f"{modulo}_web",
+                                    )
+                                selecoes[modulo] = qtd_desk + qtd_web
+                                web_data[modulo] = qtd_web
+                            else:
+                                quantidade_padrao = max(1, import_data.get(modulo, 1))
+                                selecoes[modulo] = st.number_input(
+                                    f"Nº Utilizadores - {modulo}",
+                                    min_value=1,
+                                    step=1,
+                                    format="%d",
+                                    value=quantidade_padrao,
+                                )
+                                web_data.pop(modulo, None)
                         else:
                             selecoes[modulo] = 1
     

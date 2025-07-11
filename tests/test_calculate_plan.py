@@ -55,6 +55,16 @@ def test_plan_selection(common):
     assert result["nome"] == plan["nome"]
 
 
+def test_platform_limits(common):
+    result = common.calculate_plan("Corporate", "Gestão Completo", 5, 5, {})
+    assert result["plano_final"] == 3
+
+
+def test_platform_limit_exceeded(common):
+    result = common.calculate_plan("Corporate", "Gestão Completo", 6, 5, {})
+    assert result["plano_final"] == 4
+
+
 def test_additional_user_pricing(common):
     result = common.calculate_plan("Advanced", None, 5, 3, {})
     plan = read_plan_row(4)

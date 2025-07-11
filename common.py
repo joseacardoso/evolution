@@ -39,7 +39,7 @@ produtos = {
     },
     "Recursos Humanos": {
         "Vencimento": {"plano": 3, "per_user": True},
-        "Colaborador": {"plano": 5, "per_user": True},
+        "Colaborador": {"plano": 5, "per_user": True, "web_only": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
         "OKR": {"plano": 4, "per_user": True},
     },
@@ -227,9 +227,18 @@ def calculate_plan(
             base, unidade = preco_produtos.get((modulo, plano_final), (0, 0))
             custo_base = base
             if unidade and quantidade > 0:
-                web_total = web_selecoes.get(modulo, 0)
-                web_paid = max(0, min(web_total - 1, quantidade))
-                desk_paid = max(0, quantidade - web_paid)
+                info = None
+                for mods in produtos.values():
+                    if modulo in mods:
+                        info = mods[modulo]
+                        break
+                if info and info.get("web_only"):
+                    web_paid = quantidade
+                    desk_paid = 0
+                else:
+                    web_total = web_selecoes.get(modulo, 0)
+                    web_paid = max(0, min(web_total - 1, quantidade))
+                    desk_paid = max(0, quantidade - web_paid)
                 custo_extra_desk = desk_paid * unidade
                 custo_extra_web = web_paid * unidade
                 qtd_desk = desk_paid

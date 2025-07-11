@@ -110,9 +110,12 @@ else:
         "CRM",
         "Suporte",
         "Equipa",
-        "Colaborador",
         "Careers c/ Recrutamento",
+        "Vencimento",
+        "Contabilidade",
+        "Imobilizado",
     }
+    WEB_ONLY_MODULES = {"Colaborador"}
     
     if texto_tabela:
         try:
@@ -418,7 +421,18 @@ else:
                 if escolha != "Nenhum":
                     info = modulos[escolha]
                     if info.get("per_user"):
-                        if escolha in WEB_MODULES:
+                        if escolha in WEB_ONLY_MODULES:
+                            def_web = web_data.get(escolha, 0)
+                            qtd_web = st.number_input(
+                                f"Nº Utilizadores Web - {escolha}",
+                                min_value=0,
+                                step=1,
+                                format="%d",
+                                value=def_web,
+                            )
+                            selecoes[escolha] = qtd_web
+                            web_data[escolha] = qtd_web
+                        elif escolha in WEB_MODULES:
                             def_total = import_data.get(escolha, 0)
                             def_web = web_data.get(escolha, 0)
                             def_desk = max(0, def_total - max(0, def_web - 1))
@@ -470,7 +484,19 @@ else:
                             )
                     elif ativado:
                         if info.get("per_user"):
-                            if modulo in WEB_MODULES:
+                            if modulo in WEB_ONLY_MODULES:
+                                def_web = web_data.get(modulo, 0)
+                                qtd_web = st.number_input(
+                                    f"Nº Utilizadores Web - {modulo}",
+                                    min_value=0,
+                                    step=1,
+                                    format="%d",
+                                    value=def_web,
+                                    key=f"{modulo}_web",
+                                )
+                                selecoes[modulo] = qtd_web
+                                web_data[modulo] = qtd_web
+                            elif modulo in WEB_MODULES:
                                 def_total = import_data.get(modulo, 0)
                                 def_web = web_data.get(modulo, 0)
                                 def_desk = max(0, def_total - max(0, def_web - 1))

@@ -619,20 +619,24 @@ else:
             if custo_desk > 0:
                 if modulo == "Ponto de Venda (POS/Restauração)":
                     texto_extra = format_postos(qtd_desk, adicional=True)
+                    unit_label = "Posto"
                 else:
                     texto_extra = format_additional_users(qtd_desk, 'Desktop')
+                    unit_label = "Utilizador"
+                unit_price = custo_desk / qtd_desk if qtd_desk else custo_desk
                 detalhes.append(
                     (
                         f"{modulo} ({texto_extra})",
-                        format_euro(custo_desk),
+                        f"{format_euro(custo_desk)} ({format_euro(unit_price)} por {unit_label})",
                         True,
                     )
                 )
             if custo_web > 0:
+                unit_price = custo_web / qtd_web if qtd_web else custo_web
                 detalhes.append(
                     (
                         f"{modulo} ({format_additional_users(qtd_web, 'Web')})",
-                        format_euro(custo_web),
+                        f"{format_euro(custo_web)} ({format_euro(unit_price)} por Utilizador)",
                         True,
                     )
                 )

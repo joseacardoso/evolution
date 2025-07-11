@@ -27,6 +27,25 @@ else:
         _FONT_NAME = "SegoeUI"
         _USE_CUSTOM_FONT = True
 
+    def format_additional_users(qtd: int, tipo: str | None = None) -> str:
+        if tipo:
+            tipo = f" {tipo}"
+        else:
+            tipo = ""
+        if qtd == 1:
+            return f"1 Utilizador Adicional{tipo}"
+        return f"{qtd} Utilizadores Adicionais{tipo}"
+
+
+    def format_full_users(qtd: int) -> str:
+        return "1 Full User" if qtd == 1 else f"{qtd} Full Users"
+
+    def format_postos(qtd: int, *, adicional: bool = False) -> str:
+        label = "Posto" if qtd == 1 else "Postos"
+        if adicional:
+            label += " Adicional" if qtd == 1 else "s Adicionais"
+        return f"{qtd} {label}" if qtd != 1 else f"1 {label}"
+
 
     def normalize(text: str) -> str:
         """Return lowercase text without accents."""
@@ -564,7 +583,7 @@ else:
                 if g1:
                     detalhes.append(
                         (
-                            f"Preço dos {g1} Full Users (6 a 10)",
+                            f"Preço de {format_full_users(g1)} (6 a 10)",
                             format_euro(g1 * p1),
                             True,
                         )
@@ -572,7 +591,7 @@ else:
                 if g2:
                     detalhes.append(
                         (
-                            f"Preço dos {g2} Full Users (11 a 50)",
+                            f"Preço de {format_full_users(g2)} (11 a 50)",
                             format_euro(g2 * p2),
                             True,
                         )
@@ -580,7 +599,7 @@ else:
                 if g3:
                     detalhes.append(
                         (
-                            f"Preço dos {g3} Full Users (>50)",
+                            f"Preço de {format_full_users(g3)} (>50)",
                             format_euro(g3 * p3),
                             True,
                         )
@@ -588,7 +607,7 @@ else:
             else:
                 detalhes.append(
                     (
-                        f"Preço dos {resultado['extras_utilizadores']} Full Users adicionais",
+                        f"Preço de {format_full_users(resultado['extras_utilizadores'])} adicional",
                         format_euro(resultado["custo_extra_utilizadores"]),
                         True,
                     )
@@ -598,9 +617,13 @@ else:
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
             detalhes.append((modulo, format_euro(custo_base), False))
             if custo_desk > 0:
+                if modulo == "Ponto de Venda (POS/Restauração)":
+                    texto_extra = format_postos(qtd_desk, adicional=True)
+                else:
+                    texto_extra = format_additional_users(qtd_desk, 'Desktop')
                 detalhes.append(
                     (
-                        f"{modulo} ({qtd_desk} Utilizadores Adicionais Desktop)",
+                        f"{modulo} ({texto_extra})",
                         format_euro(custo_desk),
                         True,
                     )
@@ -608,7 +631,7 @@ else:
             if custo_web > 0:
                 detalhes.append(
                     (
-                        f"{modulo} ({qtd_web} Utilizadores Adicionais Web)",
+                        f"{modulo} ({format_additional_users(qtd_web, 'Web')})",
                         format_euro(custo_web),
                         True,
                     )
@@ -651,14 +674,14 @@ else:
                 g1, g2, g3 = resultado['extras_breakdown']
                 p1, p2, p3 = resultado['precos_extras']
                 if g1:
-                    linhas_pdf.append(("  Full Users (6 a 10)", g1, p1, g1 * p1))
+                    linhas_pdf.append((f"  {format_full_users(g1)} (6 a 10)", g1, p1, g1 * p1))
                 if g2:
-                    linhas_pdf.append(("  Full Users (11 a 50)", g2, p2, g2 * p2))
+                    linhas_pdf.append((f"  {format_full_users(g2)} (11 a 50)", g2, p2, g2 * p2))
                 if g3:
-                    linhas_pdf.append(("  Full Users (>50)", g3, p3, g3 * p3))
+                    linhas_pdf.append((f"  {format_full_users(g3)} (>50)", g3, p3, g3 * p3))
             else:
                 unit = resultado['custo_extra_utilizadores'] / resultado['extras_utilizadores']
-                linhas_pdf.append(("  Full Users adicionais", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
+                linhas_pdf.append((f"  {format_full_users(resultado['extras_utilizadores'])} adicional", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
     
         for modulo, custos in resultado['modulos_detalhe'].items():
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
@@ -667,9 +690,13 @@ else:
 
             if custo_desk > 0:
                 unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
+                if modulo == "Ponto de Venda (POS/Restauração)":
+                    texto_extra = format_postos(qtd_desk, adicional=True)
+                else:
+                    texto_extra = format_additional_users(qtd_desk, 'Desktop')
                 linhas_pdf.append(
                     (
-                        f"  {modulo} ({qtd_desk} Utilizadores Adicionais Desktop)",
+                        f"  {modulo} ({texto_extra})",
                         qtd_desk,
                         unit_extra,
                         custo_desk,
@@ -679,7 +706,7 @@ else:
                 unit_extra = custo_web / qtd_web if qtd_web else custo_web
                 linhas_pdf.append(
                     (
-                        f"  {modulo} ({qtd_web} Utilizadores Adicionais Web)",
+                        f"  {modulo} ({format_additional_users(qtd_web, 'Web')})",
                         qtd_web,
                         unit_extra,
                         custo_web,

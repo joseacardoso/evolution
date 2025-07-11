@@ -13,6 +13,32 @@ WEB_MODULES = {
 
 WEB_ONLY_MODULES = {"Colaborador"}
 
+
+def format_additional_users(qtd: int, tipo: str | None = None) -> str:
+    """Return a formatted string for ``qtd`` additional users.
+
+    ``tipo`` can be "Desktop" or "Web" to specify the user type."""
+    if tipo:
+        tipo = f" {tipo}"
+    else:
+        tipo = ""
+    if qtd == 1:
+        return f"1 Utilizador Adicional{tipo}"
+    return f"{qtd} Utilizadores Adicionais{tipo}"
+
+
+def format_full_users(qtd: int) -> str:
+    """Return a formatted string for ``qtd`` Full Users."""
+    return "1 Full User" if qtd == 1 else f"{qtd} Full Users"
+
+
+def format_postos(qtd: int, *, adicional: bool = False) -> str:
+    """Return a formatted string for ``qtd`` POS stations."""
+    label = "Posto" if qtd == 1 else "Postos"
+    if adicional:
+        label += " Adicional" if qtd == 1 else "s Adicionais"
+    return f"{qtd} {label}" if qtd != 1 else f"1 {label}"
+
 st.set_page_config(layout="centered")
 setup_page(dark=st.get_option("theme.base") == "dark")
 
@@ -81,8 +107,13 @@ for area, modulos in produtos.items():
                         selecoes[escolha] = qtd_desk + qtd_web
                         web_selecoes[escolha] = qtd_web
                     else:
+                        label = (
+                            f"Nº Postos - {escolha}"
+                            if escolha == "Ponto de Venda (POS/Restauração)"
+                            else f"Nº Utilizadores - {escolha}"
+                        )
                         qtd_desk = st.number_input(
-                            f"Nº Utilizadores - {escolha}",
+                            label,
                             min_value=0,
                             step=1,
                             format="%d",
@@ -137,8 +168,13 @@ for area, modulos in produtos.items():
                             selecoes[modulo] = qtd_desk + qtd_web
                             web_selecoes[modulo] = qtd_web
                         else:
+                            label = (
+                                f"Nº Postos - {modulo}"
+                                if modulo == "Ponto de Venda (POS/Restauração)"
+                                else f"Nº Utilizadores - {modulo}"
+                            )
                             qtd_desk = st.number_input(
-                                f"Nº Utilizadores - {modulo}",
+                                label,
                                 min_value=0,
                                 step=1,
                                 format="%d",
@@ -175,7 +211,7 @@ if st.button("Calcular Plano Recomendado"):
             if g1:
                 detalhes.append(
                     (
-                        f"Preço dos {g1} Full Users (6 a 10)",
+                        f"Preço de {format_full_users(g1)} (6 a 10)",
                         format_euro(g1 * p1),
                         True,
                     )
@@ -183,7 +219,7 @@ if st.button("Calcular Plano Recomendado"):
             if g2:
                 detalhes.append(
                     (
-                        f"Preço dos {g2} Full Users (11 a 50)",
+                        f"Preço de {format_full_users(g2)} (11 a 50)",
                         format_euro(g2 * p2),
                         True,
                     )
@@ -191,7 +227,7 @@ if st.button("Calcular Plano Recomendado"):
             if g3:
                 detalhes.append(
                     (
-                        f"Preço dos {g3} Full Users (>50)",
+                        f"Preço de {format_full_users(g3)} (>50)",
                         format_euro(g3 * p3),
                         True,
                     )
@@ -199,7 +235,7 @@ if st.button("Calcular Plano Recomendado"):
         else:
             detalhes.append(
                 (
-                    f"Preço dos {resultado['extras_utilizadores']} Full Users adicionais",
+                    f"Preço de {format_full_users(resultado['extras_utilizadores'])} adicional",
                     format_euro(resultado["custo_extra_utilizadores"]),
                     True,
                 )
@@ -209,9 +245,13 @@ if st.button("Calcular Plano Recomendado"):
         custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
         detalhes.append((modulo, format_euro(custo_base), False))
         if custo_desk > 0:
+            if modulo == "Ponto de Venda (POS/Restauração)":
+                texto_extra = format_postos(qtd_desk, adicional=True)
+            else:
+                texto_extra = format_additional_users(qtd_desk, "Desktop")
             detalhes.append(
                 (
-                    f"{modulo} ({qtd_desk} Utilizadores Adicionais Desktop)",
+                    f"{modulo} ({texto_extra})",
                     format_euro(custo_desk),
                     True,
                 )
@@ -219,7 +259,7 @@ if st.button("Calcular Plano Recomendado"):
         if custo_web > 0:
             detalhes.append(
                 (
-                    f"{modulo} ({qtd_web} Utilizadores Adicionais Web)",
+                    f"{modulo} ({format_additional_users(qtd_web, 'Web')})",
                     format_euro(custo_web),
                     True,
                 )

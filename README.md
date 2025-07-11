@@ -30,3 +30,5 @@ selected in Streamlit.
 ## Fonts
 
 Create a folder named `fonts_dir` in the repository root and copy the `segoeui.ttf` and `segoeuib.ttf` files into it. These fonts are used when generating PDFs.
+
+For a detailed description of the plan calculation logic see [LOGICA_PLANOS.md](LOGICA_PLANOS.md).

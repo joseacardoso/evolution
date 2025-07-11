@@ -539,7 +539,8 @@ else:
         resultado = calculate_plan(
             plano_atual,
             tipo_gestao,
-            utilizadores,
+            utilizadores_desk,
+            utilizadores_web,
             selecoes,
             web_data,
             extras_importados,

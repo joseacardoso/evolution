@@ -49,18 +49,18 @@ def read_module_row(product, plan_id):
 
 
 def test_plan_selection(common):
-    result = common.calculate_plan("Corporate", "Gestão Completo", 2, {})
+    result = common.calculate_plan("Corporate", "Gestão Completo", 1, 1, {})
     plan = read_plan_row(3)
     assert result["plano_final"] == 3
     assert result["nome"] == plan["nome"]
 
 
 def test_additional_user_pricing(common):
-    result = common.calculate_plan("Advanced", None, 8, {})
+    result = common.calculate_plan("Advanced", None, 5, 3, {})
     plan = read_plan_row(4)
     included = int(plan["utilizadores_incluidos"])
     extra_price = float(plan["preco_extra_ate_10"])
-    extras = 8 - included
+    extras = 2
     expected_cost = extras * extra_price
     assert result["plano_final"] == 4
     assert result["extras_utilizadores"] == extras
@@ -68,19 +68,19 @@ def test_additional_user_pricing(common):
 
 
 def test_module_costs(common):
-    result = common.calculate_plan("Enterprise", None, 5, {"CRM": 3})
+    result = common.calculate_plan("Enterprise", None, 5, 0, {"CRM": 3})
     plan = read_plan_row(6)
     module = read_module_row("CRM", 6)
     base = float(module["preco_base"])
     unit = float(module["preco_unidade"])
     expected_module_base = base
-    expected_module_extra = unit * 3
+    expected_module_extra = unit * 2
     expected_total = float(plan["preco_base"]) + expected_module_base + expected_module_extra
     assert result["modulos_detalhe"]["CRM"] == (
         expected_module_base,
         expected_module_extra,
         0,
-        3,
+        2,
         0,
     )
     assert result["custo_estimado"] == expected_total
@@ -91,15 +91,16 @@ def test_web_module_allocation(common):
         "Enterprise",
         None,
         5,
+        0,
         {"CRM": 12},
         {"CRM": 4},
     )
     unit = float(read_module_row("CRM", 6)["preco_unidade"])
     assert result["modulos_detalhe"]["CRM"] == (
         0,
-        unit * 9,
+        unit * 7,
         unit * 3,
-        9,
+        7,
         3,
     )
 
@@ -109,6 +110,7 @@ def test_web_only_module(common):
         "Enterprise",
         None,
         5,
+        0,
         {"Colaborador": 5},
         {"Colaborador": 5},
     )
@@ -116,7 +118,7 @@ def test_web_only_module(common):
     assert result["modulos_detalhe"]["Colaborador"] == (
         0,
         0,
-        unit * 5,
+        unit * 4,
         0,
-        5,
+        4,
     )

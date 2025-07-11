@@ -65,6 +65,18 @@ produtos = {
     },
 }
 
+WEB_MODULES = {
+    "CRM",
+    "Suporte",
+    "Equipa",
+    "Careers c/ Recrutamento",
+    "Vencimento",
+    "Contabilidade",
+    "Imobilizado",
+}
+
+WEB_ONLY_MODULES = {"Colaborador"}
+
 
 def setup_page(dark: bool = False) -> None:
     """Apply common Streamlit styling and logo."""
@@ -95,7 +107,8 @@ def format_euro(valor: float, *, pdf: bool = False) -> str:
 def calculate_plan(
     plano_atual: str,
     tipo_gestao: str | None,
-    utilizadores: int,
+    utilizadores_desktop: int,
+    utilizadores_web: int,
     selecoes: dict[str, int],
     web_selecoes: dict[str, int] | None = None,
     extras_importados: set[str] | None = None,
@@ -106,6 +119,8 @@ def calculate_plan(
     extras_planos = extras_planos or {}
     web_selecoes = web_selecoes or {}
     warnings: list[str] = []
+
+    utilizadores = utilizadores_desktop + utilizadores_web
 
     planos = []
     if plano_atual == "Enterprise":
@@ -175,7 +190,9 @@ def calculate_plan(
         for _, row in df_precos.iterrows()
     }
 
-    nome, preco_base, incluidos, preco_ate_10, preco_ate_50, preco_mais_50 = preco_planos[plano_final]
+    nome, preco_base, incluidos_desk, preco_ate_10, preco_ate_50, preco_mais_50 = preco_planos[plano_final]
+
+    incluidos_web = incluidos_desk if plano_final >= 3 else 0
 
     preco_produtos = {
         (row["produto"], int(row["plano_id"])): (
@@ -185,7 +202,9 @@ def calculate_plan(
         for _, row in df_produtos.iterrows()
     }
 
-    extras = max(0, utilizadores - incluidos)
+    extras_desk = max(0, utilizadores_desktop - incluidos_desk)
+    extras_web = max(0, utilizadores_web - incluidos_web)
+    extras = extras_desk + extras_web
     grupo1 = grupo2 = grupo3 = 0
     custo_extra_utilizadores = 0
 
@@ -233,12 +252,17 @@ def calculate_plan(
                         info = mods[modulo]
                         break
                 if info and info.get("web_only"):
-                    web_paid = quantidade
-                    desk_paid = 0
-                else:
                     web_total = web_selecoes.get(modulo, 0)
-                    web_paid = max(0, min(web_total - 1, quantidade))
-                    desk_paid = max(0, quantidade - web_paid)
+                    web_paid = max(0, web_total - 1)
+                    desk_paid = 0
+                elif modulo in WEB_MODULES:
+                    web_total = web_selecoes.get(modulo, 0)
+                    desk_total = quantidade - web_total
+                    web_paid = max(0, web_total - 1)
+                    desk_paid = max(0, desk_total - 1)
+                else:
+                    web_paid = 0
+                    desk_paid = max(0, quantidade - 1)
                 custo_extra_desk = desk_paid * unidade
                 custo_extra_web = web_paid * unidade
                 qtd_desk = desk_paid

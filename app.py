@@ -150,7 +150,12 @@ for area, modulos in produtos.items():
 # Lógica do plano
 if st.button("Calcular Plano Recomendado"):
     resultado = calculate_plan(
-        plano_atual, tipo_gestao, utilizadores, selecoes, web_selecoes
+        plano_atual,
+        tipo_gestao,
+        utilizadores_desk,
+        utilizadores_web,
+        selecoes,
+        web_selecoes,
     )
 
     for msg in resultado["warnings"]:

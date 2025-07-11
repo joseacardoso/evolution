@@ -1,4 +1,6 @@
 import streamlit as st
+from pathlib import Path
+from copy import deepcopy
 from common import calculate_plan, produtos, setup_page
 
 WEB_MODULES = {
@@ -38,6 +40,19 @@ def format_postos(qtd: int, *, adicional: bool = False) -> str:
 st.set_page_config(layout="centered")
 setup_page(dark=st.get_option("theme.base") == "dark")
 
+_FONTS_DIR = Path("fonts_dir")
+_FONT_REGULAR = _FONTS_DIR / "segoeui.ttf"
+_FONT_BOLD = _FONTS_DIR / "segoeuib.ttf"
+_FONT_NAME = "Helvetica"
+_USE_CUSTOM_FONT = False
+if _FONT_REGULAR.exists() and _FONT_REGULAR.stat().st_size > 100000:
+    _FONT_NAME = "SegoeUI"
+    _USE_CUSTOM_FONT = True
+
+africa_produtos = deepcopy(produtos)
+africa_produtos.get("Funcionalidades Adicionais de Gestão", {}).pop("Denúncias", None)
+africa_produtos.pop("Connected Services", None)
+
 st.title("Simulador de Plano PHC Evolution - África")
 
 pais = st.selectbox("País", ["Angola", "Moçambique"])
@@ -50,12 +65,63 @@ else:
     taxa = 75
     moeda = "MZN"
 
+web_modules = set(WEB_MODULES)
+if pais == "Angola":
+    web_modules.discard("Vencimento")
+
 
 def format_moeda(valor: float) -> str:
     valor_africa = int(round(valor * fator))
     valor_local = valor_africa * taxa
     valor_str = f"{int(round(valor_local)):,}".replace(",", ".")
     return f"{valor_str} {moeda}"
+
+
+def gerar_pdf(linhas: list[tuple[str, int, float, float]]) -> bytes:
+    """Create a simple PDF with a table of products."""
+    from fpdf import FPDF
+
+    pdf = FPDF()
+    pdf.add_page()
+
+    font_name = _FONT_NAME
+    use_custom = _USE_CUSTOM_FONT
+    if _USE_CUSTOM_FONT:
+        pdf.add_font(font_name, "", str(_FONT_REGULAR), uni=True)
+        if _FONT_BOLD.exists() and _FONT_BOLD.stat().st_size > 100000:
+            pdf.add_font(font_name, "B", str(_FONT_BOLD), uni=True)
+
+    pdf.set_font(font_name, size=12)
+    pdf.cell(0, 10, "Proposta interna Cegid PHC Evolution", ln=True, align="C")
+    pdf.ln(5)
+
+    colw = [80, 20, 40, 40]
+    headers = ["Produto", "Qtd", "Valor Unit.", "Total"]
+    pdf.set_font(font_name, "B", 10)
+    for w, h in zip(colw, headers):
+        pdf.cell(w, 8, h, border=1, align="C")
+    pdf.ln()
+    pdf.set_font(font_name, size=10)
+
+    for prod, qtd, unit, total in linhas:
+        start_x = pdf.get_x()
+        start_y = pdf.get_y()
+
+        pdf.multi_cell(colw[0], 8, str(prod), border=1)
+        row_height = pdf.get_y() - start_y
+
+        pdf.set_xy(start_x + colw[0], start_y)
+        pdf.cell(colw[1], row_height, str(qtd), border=1, align="C")
+        pdf.cell(colw[2], row_height, format_moeda(unit), border=1, align="R")
+        pdf.cell(colw[3], row_height, format_moeda(total), border=1, align="R")
+        pdf.ln(row_height)
+
+    valor_total = sum(t for _, _, _, t in linhas)
+    pdf.set_font(font_name, "B", 10)
+    pdf.cell(colw[0] + colw[1] + colw[2], 8, "Total", border=1)
+    pdf.cell(colw[3], 8, format_moeda(valor_total), border=1, align="R")
+
+    return pdf.output(dest="S").encode("latin-1")
 
 plano_atual = st.selectbox("Plano Atual", ["Corporate", "Advanced", "Enterprise"])
 
@@ -79,7 +145,7 @@ with c2:
 
 selecoes = {}
 web_selecoes = {}
-for area, modulos in produtos.items():
+for area, modulos in africa_produtos.items():
     with st.expander(area, expanded=False):
         if area == "Projeto":
             opcoes = ["Nenhum"] + list(modulos.keys())
@@ -97,7 +163,7 @@ for area, modulos in produtos.items():
                         )
                         selecoes[escolha] = qtd_web
                         web_selecoes[escolha] = qtd_web
-                    elif escolha in WEB_MODULES:
+                    elif escolha in web_modules:
                         cpd, cpw = st.columns(2)
                         with cpd:
                             qtd_desk = st.number_input(
@@ -158,7 +224,7 @@ for area, modulos in produtos.items():
                             )
                             selecoes[modulo] = qtd_web
                             web_selecoes[modulo] = qtd_web
-                        elif modulo in WEB_MODULES:
+                        elif modulo in web_modules:
                             cd, cw = st.columns(2)
                             with cd:
                                 qtd_desk = st.number_input(
@@ -257,20 +323,24 @@ if st.button("Calcular Plano Recomendado"):
         if custo_desk > 0:
             if modulo == "Ponto de Venda (POS/Restauração)":
                 texto_extra = format_postos(qtd_desk, adicional=True)
+                unit_label = "Posto"
             else:
                 texto_extra = format_additional_users(qtd_desk, "Desktop")
+                unit_label = "Utilizador"
+            unit_price = custo_desk / qtd_desk if qtd_desk else custo_desk
             detalhes.append(
                 (
                     f"{modulo} ({texto_extra})",
-                    format_moeda(custo_desk),
+                    f"{format_moeda(custo_desk)} ({format_moeda(unit_price)} por {unit_label})",
                     True,
                 )
             )
         if custo_web > 0:
+            unit_price = custo_web / qtd_web if qtd_web else custo_web
             detalhes.append(
                 (
                     f"{modulo} ({format_additional_users(qtd_web, 'Web')})",
-                    format_moeda(custo_web),
+                    f"{format_moeda(custo_web)} ({format_moeda(unit_price)} por Utilizador)",
                     True,
                 )
             )
@@ -294,3 +364,57 @@ if st.button("Calcular Plano Recomendado"):
             "<p style='color:#000000;'>O cliente tinha GenAI e vai evoluir para Cegid Pulse.</p>",
             unsafe_allow_html=True,
         )
+
+    linhas_pdf = []
+    linhas_pdf.append((f"Plano {resultado['nome']}", 1, resultado['preco_base'], resultado['preco_base']))
+    if resultado['custo_extra_utilizadores'] > 0:
+        if resultado['plano_final'] == 6:
+            g1, g2, g3 = resultado['extras_breakdown']
+            p1, p2, p3 = resultado['precos_extras']
+            if g1:
+                linhas_pdf.append((f"  {format_full_users(g1)} (6 a 10)", g1, p1, g1 * p1))
+            if g2:
+                linhas_pdf.append((f"  {format_full_users(g2)} (11 a 50)", g2, p2, g2 * p2))
+            if g3:
+                linhas_pdf.append((f"  {format_full_users(g3)} (>50)", g3, p3, g3 * p3))
+        else:
+            unit = resultado['custo_extra_utilizadores'] / resultado['extras_utilizadores']
+            linhas_pdf.append((f"  {format_full_users(resultado['extras_utilizadores'])} adicional", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
+
+    for modulo, custos in resultado['modulos_detalhe'].items():
+        custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
+
+        linhas_pdf.append((modulo, 1, custo_base, custo_base))
+
+        if custo_desk > 0:
+            unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
+            if modulo == "Ponto de Venda (POS/Restauração)":
+                texto_extra = format_postos(qtd_desk, adicional=True)
+            else:
+                texto_extra = format_additional_users(qtd_desk, 'Desktop')
+            linhas_pdf.append(
+                (
+                    f"  {modulo} ({texto_extra})",
+                    qtd_desk,
+                    unit_extra,
+                    custo_desk,
+                )
+            )
+        if custo_web > 0:
+            unit_extra = custo_web / qtd_web if qtd_web else custo_web
+            linhas_pdf.append(
+                (
+                    f"  {modulo} ({format_additional_users(qtd_web, 'Web')})",
+                    qtd_web,
+                    unit_extra,
+                    custo_web,
+                )
+            )
+
+    pdf_bytes = gerar_pdf(linhas_pdf)
+    st.download_button(
+        "Descarregar Orçamento (PDF)",
+        data=pdf_bytes,
+        file_name="orcamento.pdf",
+        mime="application/pdf",
+    )

@@ -26,39 +26,35 @@ def load_precos_produtos() -> pd.DataFrame:
     return pd.read_csv("precos_produtos.csv", sep=",")
 
 produtos = {
-    "Core e Transversais": {
+    "Funcionalidades Adicionais de Gestão": {
         "Inventário Avançado": {"plano": 3, "per_user": False},
-        "Ocupação": {"plano": 3, "per_user": False},
-        "Frota": {"plano": 3, "per_user": False},
         "Logística": {"plano": 5, "per_user": False},
+        "Frota": {"plano": 3, "per_user": False},
         "Denúncias": {"plano": 5, "per_user": False},
-        "Documentos": {"plano": 3, "per_user": False},
-        "GenAI": {"plano": 2, "per_user": False},
-        "CRM": {"plano": 3, "per_user": True},
         "BPM": {"plano": 5, "per_user": False},
-        "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
     },
-    "Área Financeira e Recursos Humanos": {
+    "Financeira": {
         "Contabilidade": {"plano": 3, "per_user": True},
         "Imobilizado": {"plano": 3, "per_user": True},
+    },
+    "Recursos Humanos": {
         "Vencimento": {"plano": 3, "per_user": True},
-        "SHST": {"plano": 3, "per_user": True},
         "Colaborador": {"plano": 5, "per_user": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
         "OKR": {"plano": 4, "per_user": True},
-        "Equipa": {"plano": 3, "per_user": True},
-        "Formação": {"plano": 3, "per_user": False},
-        "Imóveis": {"plano": 3, "per_user": False},
     },
-    "Outros": {
+    "Extras e Setoriais": {
+        "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
         "Suporte": {"plano": 2, "per_user": True},
+        "CRM": {"plano": 3, "per_user": True},
+        "Equipa": {"plano": 3, "per_user": True},
         "Ecommerce B2B": {"plano": 3, "per_user": False},
     },
     "Projeto": {
-        "Orçamentação": {"plano": 3, "per_user": True},
-        "Orçamentação + Medição": {"plano": 3, "per_user": True},
-        "Orçamentação + Medição + Controlo": {"plano": 3, "per_user": True},
-        "Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços": {
+        "Projeto | Orçamentação": {"plano": 3, "per_user": True},
+        "Projeto | Orçamentação + Medição": {"plano": 3, "per_user": True},
+        "Projeto | Orçamentação + Medição + Controlo": {"plano": 3, "per_user": True},
+        "Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços)": {
             "plano": 3,
             "per_user": True,
         },

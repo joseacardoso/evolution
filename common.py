@@ -130,8 +130,6 @@ def calculate_plan(
     web_selecoes = web_selecoes or {}
     warnings: list[str] = []
 
-    utilizadores = utilizadores_desktop + utilizadores_web
-
     planos = []
     if plano_atual == "Enterprise":
         planos.append(6)
@@ -156,7 +154,8 @@ def calculate_plan(
     plano_utilizadores = None
     for pid, limite in limites:
         if pd.notna(limite) and str(limite).strip() != "":
-            if utilizadores <= int(limite):
+            lim = int(limite)
+            if utilizadores_desktop <= lim and utilizadores_web <= lim:
                 plano_utilizadores = pid
                 break
     if plano_utilizadores is None:

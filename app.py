@@ -16,10 +16,20 @@ if plano_atual == "Corporate":
         "Gestão Completo"
     ])
 
-utilizadores = st.number_input("Nº de Utilizadores de Gestão", min_value=0, step=1, format="%d")
+c1, c2 = st.columns(2)
+with c1:
+    utilizadores_desk = st.number_input(
+        "Nº Utilizadores Desktop de Gestão", min_value=0, step=1, format="%d"
+    )
+with c2:
+    utilizadores_web = st.number_input(
+        "Nº Utilizadores Web de Gestão", min_value=0, step=1, format="%d"
+    )
+utilizadores = utilizadores_desk + utilizadores_web
 
 # Captura das seleções
 selecoes = {}
+web_selecoes = {}
 for area, modulos in produtos.items():
     with st.expander(area, expanded=False):
         if area == "Projeto":
@@ -28,12 +38,25 @@ for area, modulos in produtos.items():
             if escolha != "Nenhum":
                 info = modulos[escolha]
                 if info.get("per_user"):
-                    selecoes[escolha] = st.number_input(
-                        f"Nº Utilizadores - {escolha}",
-                        min_value=1,
-                        step=1,
-                        format="%d",
-                    )
+                    cpd, cpw = st.columns(2)
+                    with cpd:
+                        qtd_desk = st.number_input(
+                            f"Nº Utilizadores Desktop - {escolha}",
+                            min_value=0,
+                            step=1,
+                            format="%d",
+                            key=f"{escolha}_desk",
+                        )
+                    with cpw:
+                        qtd_web = st.number_input(
+                            f"Nº Utilizadores Web - {escolha}",
+                            min_value=0,
+                            step=1,
+                            format="%d",
+                            key=f"{escolha}_web",
+                        )
+                    selecoes[escolha] = qtd_desk + qtd_web
+                    web_selecoes[escolha] = qtd_web
                 else:
                     selecoes[escolha] = 1
         else:
@@ -52,18 +75,33 @@ for area, modulos in produtos.items():
                         )
                 elif ativado:
                     if info.get("per_user"):
-                        selecoes[modulo] = st.number_input(
-                            f"Nº Utilizadores - {modulo}",
-                            min_value=1,
-                            step=1,
-                            format="%d",
-                        )
+                        cd, cw = st.columns(2)
+                        with cd:
+                            qtd_desk = st.number_input(
+                                f"Nº Utilizadores Desktop - {modulo}",
+                                min_value=0,
+                                step=1,
+                                format="%d",
+                                key=f"{modulo}_desk",
+                            )
+                        with cw:
+                            qtd_web = st.number_input(
+                                f"Nº Utilizadores Web - {modulo}",
+                                min_value=0,
+                                step=1,
+                                format="%d",
+                                key=f"{modulo}_web",
+                            )
+                        selecoes[modulo] = qtd_desk + qtd_web
+                        web_selecoes[modulo] = qtd_web
                     else:
                         selecoes[modulo] = 1
 
 # Lógica do plano
 if st.button("Calcular Plano Recomendado"):
-    resultado = calculate_plan(plano_atual, tipo_gestao, utilizadores, selecoes)
+    resultado = calculate_plan(
+        plano_atual, tipo_gestao, utilizadores, selecoes, web_selecoes
+    )
 
     for msg in resultado["warnings"]:
         st.warning(msg)

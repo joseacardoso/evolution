@@ -52,7 +52,8 @@ else:
 
 
 def format_moeda(valor: float) -> str:
-    valor_local = valor * fator * taxa
+    valor_africa = int(round(valor * fator))
+    valor_local = valor_africa * taxa
     valor_str = f"{int(round(valor_local)):,}".replace(",", ".")
     return f"{valor_str} {moeda}"
 

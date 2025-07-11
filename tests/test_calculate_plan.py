@@ -122,3 +122,15 @@ def test_web_only_module(common):
         0,
         4,
     )
+
+
+def test_pos_plan_limit(common):
+    result = common.calculate_plan(
+        "Corporate",
+        "Gestão Completo",
+        1,
+        0,
+        {"Ponto de Venda (POS/Restauração)": 6},
+    )
+    # 6 postos requerem o plano Advanced (10 postos)
+    assert result["plano_final"] == 4

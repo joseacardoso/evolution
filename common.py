@@ -240,7 +240,22 @@ def calculate_plan(
 
     custo_modulos = 0
     modulos_detalhe: dict[str, tuple[float, float, float, int, int]] = {}
+    pos_breakdown = None
+    bank_packs = (0, 0)
+
     for modulo, quantidade in selecoes.items():
+        if modulo == "Bank Connector":
+            extras_bancos = quantidade
+            pack10 = extras_bancos // 10
+            resto = extras_bancos % 10
+            pack5 = 0
+            if resto:
+                if resto <= 5:
+                    pack5 = 1
+                else:
+                    pack10 += 1
+            bank_packs = (pack5, pack10)
+            continue
         if modulo == "Ponto de Venda (POS/Restauração)":
             preco_primeiro = preco_produtos.get(("POS (1º)", plano_final), (0, 0))[0]
             preco_2_10 = preco_produtos.get(("POS (2 a 10)", plano_final), (0, 0))[1]
@@ -253,6 +268,7 @@ def calculate_plan(
                 custo_base = preco_primeiro
                 custo_extra = ate_10 * preco_2_10 + acima_10 * preco_maior_10
                 qtd_desk = ate_10 + acima_10
+                pos_breakdown = (ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10)
             else:
                 custo_base = 0
                 custo_extra = 0
@@ -311,6 +327,8 @@ def calculate_plan(
         elif plano_final == 6:
             bancos_base = 5
 
+    bancos_total = bancos_base + bank_packs[0] * 5 + bank_packs[1] * 10
+
     return {
         "nome": nome,
         "preco_base": preco_base,
@@ -322,5 +340,8 @@ def calculate_plan(
         "modulos_detalhe": modulos_detalhe,
         "plano_final": plano_final,
         "bancos_base": bancos_base,
+        "bank_packs": bank_packs,
+        "bancos_total": bancos_total,
+        "pos_breakdown": pos_breakdown,
         "warnings": warnings,
     }

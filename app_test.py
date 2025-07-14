@@ -121,7 +121,7 @@ else:
     utilizadores_importados = None
     utilizadores_desk_importados = None
     utilizadores_web_importados = 0
-    gestao_default_idx = 0
+    gestao_default_idx = 2
     plano_importado = 0  # 0=Corporate,1=Advanced,2=Enterprise
     extras_planos = {
         "intrastat": 4,
@@ -329,14 +329,10 @@ else:
                 web_mod = int(row.get("Web", 0))
                 quantidade = max(0, total_mod - rede_mod)
                 desktop_count = max(0, quantidade - web_mod)
-                if web_mod:
-                    quantidade = desktop_count + max(0, web_mod - 1)
-                else:
-                    quantidade = desktop_count
                 modulo_lower = normalize(modulo)
                 if modulo_lower in ["gestao", "gestão"]:
                     utilizadores_importados = total_mod
-                    utilizadores_desk_importados = desktop_count
+                    utilizadores_desk_importados = max(0, total_mod - web_mod + rede_mod)
                     utilizadores_web_importados = web_mod
                     texto_full = " ".join(
                         [
@@ -353,6 +349,10 @@ else:
                     elif gestao_default_idx not in (0, 1):
                         gestao_default_idx = 2
                     continue
+                if web_mod:
+                    quantidade = desktop_count + max(0, web_mod - 1)
+                else:
+                    quantidade = desktop_count
                 if modulo_lower in modulos_ignorados:
                     if modulo_lower in {
                         "consolidacao",

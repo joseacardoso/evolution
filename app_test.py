@@ -613,33 +613,51 @@ else:
                     )
                 )
     
+        pos_info = resultado.get("pos_breakdown")
         for modulo, custos in resultado["modulos_detalhe"].items():
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
-            detalhes.append((modulo, format_euro(custo_base), False))
-            if custo_desk > 0:
-                if modulo == "Ponto de Venda (POS/Restauração)":
-                    texto_extra = format_postos(qtd_desk, adicional=True)
-                    unit_label = "Posto"
-                else:
+            if modulo == "Ponto de Venda (POS/Restauração)" and pos_info:
+                ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+                detalhes.append(("1º Ponto de Venda (POS/Restauração)", format_euro(preco_primeiro), False))
+                if ate_10 > 0:
+                    total = ate_10 * preco_2_10
+                    detalhes.append(
+                        (
+                            f"Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
+                            f"{format_euro(total)} ({format_euro(preco_2_10)} por Posto)",
+                            True,
+                        )
+                    )
+                if acima_10 > 0:
+                    total = acima_10 * preco_maior_10
+                    detalhes.append(
+                        (
+                            f"Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
+                            f"{format_euro(total)} ({format_euro(preco_maior_10)} por Posto)",
+                            True,
+                        )
+                    )
+            else:
+                detalhes.append((modulo, format_euro(custo_base), False))
+                if custo_desk > 0:
                     texto_extra = format_additional_users(qtd_desk, 'Desktop')
-                    unit_label = "Utilizador"
-                unit_price = custo_desk / qtd_desk if qtd_desk else custo_desk
-                detalhes.append(
-                    (
-                        f"{modulo} ({texto_extra})",
-                        f"{format_euro(custo_desk)} ({format_euro(unit_price)} por {unit_label})",
-                        True,
+                    unit_price = custo_desk / qtd_desk if qtd_desk else custo_desk
+                    detalhes.append(
+                        (
+                            f"{modulo} ({texto_extra})",
+                            f"{format_euro(custo_desk)} ({format_euro(unit_price)} por Utilizador)",
+                            True,
+                        )
                     )
-                )
-            if custo_web > 0:
-                unit_price = custo_web / qtd_web if qtd_web else custo_web
-                detalhes.append(
-                    (
-                        f"{modulo} ({format_additional_users(qtd_web, 'Web')})",
-                        f"{format_euro(custo_web)} ({format_euro(unit_price)} por Utilizador)",
-                        True,
+                if custo_web > 0:
+                    unit_price = custo_web / qtd_web if qtd_web else custo_web
+                    detalhes.append(
+                        (
+                            f"{modulo} ({format_additional_users(qtd_web, 'Web')})",
+                            f"{format_euro(unit_price * qtd_web)} ({format_euro(unit_price)} por Utilizador)",
+                            True,
+                        )
                     )
-                )
     
         for texto, valor, indent in detalhes:
             bullet = "" if indent else "• "
@@ -652,6 +670,18 @@ else:
         if resultado["bancos_base"]:
             st.markdown(
                 f"<p style='color:#000000;'>Bank Connector inclui {resultado['bancos_base']} banco(s) base.</p>",
+                unsafe_allow_html=True,
+            )
+        pack5, pack10 = resultado.get("bank_packs", (0, 0))
+        if pack5 or pack10:
+            texto = []
+            if pack5:
+                texto.append(f"{pack5} Bank Connector 5")
+            if pack10:
+                texto.append(f"{pack10} Bank Connector 10")
+            packs = " e ".join(texto)
+            st.markdown(
+                f"<p style='color:#000000;'>Necessário adicionar {packs} (total de {resultado['bancos_total']} bancos).</p>",
                 unsafe_allow_html=True,
             )
     
@@ -687,35 +717,51 @@ else:
                 unit = resultado['custo_extra_utilizadores'] / resultado['extras_utilizadores']
                 linhas_pdf.append((f"  {format_full_users(resultado['extras_utilizadores'])} adicional", resultado['extras_utilizadores'], unit, resultado['custo_extra_utilizadores']))
     
+        pos_info = resultado.get('pos_breakdown')
         for modulo, custos in resultado['modulos_detalhe'].items():
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
 
-            linhas_pdf.append((modulo, 1, custo_base, custo_base))
+            if modulo == 'Ponto de Venda (POS/Restauração)' and pos_info:
+                ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+                linhas_pdf.append(("1º Ponto de Venda (POS/Restauração)", 1, preco_primeiro, preco_primeiro))
+                if ate_10 > 0:
+                    linhas_pdf.append((
+                        f"  Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
+                        ate_10,
+                        preco_2_10,
+                        ate_10 * preco_2_10,
+                    ))
+                if acima_10 > 0:
+                    linhas_pdf.append((
+                        f"  Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
+                        acima_10,
+                        preco_maior_10,
+                        acima_10 * preco_maior_10,
+                    ))
+            else:
+                linhas_pdf.append((modulo, 1, custo_base, custo_base))
 
-            if custo_desk > 0:
-                unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
-                if modulo == "Ponto de Venda (POS/Restauração)":
-                    texto_extra = format_postos(qtd_desk, adicional=True)
-                else:
+                if custo_desk > 0:
+                    unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
                     texto_extra = format_additional_users(qtd_desk, 'Desktop')
-                linhas_pdf.append(
-                    (
-                        f"  {modulo} ({texto_extra})",
-                        qtd_desk,
-                        unit_extra,
-                        custo_desk,
+                    linhas_pdf.append(
+                        (
+                            f"  {modulo} ({texto_extra})",
+                            qtd_desk,
+                            unit_extra,
+                            custo_desk,
+                        )
                     )
-                )
-            if custo_web > 0:
-                unit_extra = custo_web / qtd_web if qtd_web else custo_web
-                linhas_pdf.append(
-                    (
-                        f"  {modulo} ({format_additional_users(qtd_web, 'Web')})",
-                        qtd_web,
-                        unit_extra,
-                        custo_web,
+                if custo_web > 0:
+                    unit_extra = custo_web / qtd_web if qtd_web else custo_web
+                    linhas_pdf.append(
+                        (
+                            f"  {modulo} ({format_additional_users(qtd_web, 'Web')})",
+                            qtd_web,
+                            unit_extra,
+                            custo_web,
+                        )
                     )
-                )
     
         pdf_bytes = gerar_pdf(linhas_pdf)
         st.download_button(

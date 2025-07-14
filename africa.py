@@ -1,7 +1,7 @@
 import streamlit as st
 from pathlib import Path
 from copy import deepcopy
-from common import calculate_plan, produtos, setup_page
+from common import BANK_PACK_PRICES, calculate_plan, produtos, setup_page
 
 WEB_MODULES = {
     "CRM",
@@ -389,6 +389,16 @@ if st.button("Calcular Plano Recomendado"):
             f"<p style='color:#000000;'>Necessário adicionar {packs} (total de {resultado['bancos_total']} bancos).</p>",
             unsafe_allow_html=True,
         )
+        if pack5:
+            st.markdown(
+                f"<p style='color:#000000;'>Bank Connector 5: {format_moeda(BANK_PACK_PRICES[5] * pack5)}</p>",
+                unsafe_allow_html=True,
+            )
+        if pack10:
+            st.markdown(
+                f"<p style='color:#000000;'>Bank Connector 10: {format_moeda(BANK_PACK_PRICES[10] * pack10)}</p>",
+                unsafe_allow_html=True,
+            )
 
     if "GenAI" in selecoes:
         st.markdown(

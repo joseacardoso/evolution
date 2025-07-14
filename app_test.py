@@ -119,6 +119,9 @@ else:
     import_data = {}
     web_data = {}
     utilizadores_importados = None
+    utilizadores_desk_importados = None
+    utilizadores_web_importados = 0
+    gestao_default_idx = 0
     plano_importado = 0  # 0=Corporate,1=Advanced,2=Enterprise
     extras_planos = {
         "intrastat": 4,
@@ -203,6 +206,7 @@ else:
                 "equipamentos",
                 "equipamento",
                 "lotes",
+                "lotesintranet",
                 "grelhas",
                 "localizações",
                 "localizacoes",
@@ -281,6 +285,9 @@ else:
                 "terminais portateis": "Inventário Avançado",
                 "terminais portáteis": "Inventário Avançado",
                 "equipamento": "Inventário Avançado",
+                "lotes": "Inventário Avançado",
+                "lotes intranet": "Inventário Avançado",
+                "lotesintranet": "Inventário Avançado",
                 "suporte extranet": "Suporte",
                 "suporteextranet": "Suporte",
                 "suporteintranet": "Suporte",
@@ -329,6 +336,22 @@ else:
                 modulo_lower = normalize(modulo)
                 if modulo_lower in ["gestao", "gestão"]:
                     utilizadores_importados = total_mod
+                    utilizadores_desk_importados = desktop_count
+                    utilizadores_web_importados = web_mod
+                    texto_full = " ".join(
+                        [
+                            str(row.get("Designação", "")),
+                            modulo,
+                            str(row.get(sub_col, "")),
+                            str(row.get("Produto3", "")),
+                        ]
+                    ).lower()
+                    if "terceir" in texto_full:
+                        gestao_default_idx = 1
+                    elif "client" in texto_full or "fatur" in texto_full:
+                        gestao_default_idx = 0
+                    elif gestao_default_idx not in (0, 1):
+                        gestao_default_idx = 2
                     continue
                 if modulo_lower in modulos_ignorados:
                     if modulo_lower in {
@@ -410,6 +433,7 @@ else:
         tipo_gestao = st.selectbox(
             "Tipo de Gestão",
             ["Gestão Clientes", "Gestão Terceiros", "Gestão Completo"],
+            index=gestao_default_idx,
         )
     
     
@@ -421,7 +445,7 @@ else:
             min_value=0,
             step=1,
             format="%d",
-            value=utilizadores_importados if utilizadores_importados is not None else 0,
+            value=utilizadores_desk_importados if utilizadores_desk_importados is not None else 0,
         )
     with c2:
         utilizadores_web = st.number_input(
@@ -429,6 +453,7 @@ else:
             min_value=0,
             step=1,
             format="%d",
+            value=utilizadores_web_importados,
         )
     utilizadores = utilizadores_desk + utilizadores_web
     

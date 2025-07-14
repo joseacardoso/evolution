@@ -36,8 +36,8 @@ def format_postos(qtd: int, *, adicional: bool = False) -> str:
     """Return a formatted string for ``qtd`` POS stations."""
     label = "Posto" if qtd == 1 else "Postos"
     if adicional:
-        label += " Adicional" if qtd == 1 else "s Adicionais"
-    return f"{qtd} {label}" if qtd != 1 else f"1 {label}"
+        label += " Adicional" if qtd == 1 else " Adicionais"
+    return f"{qtd} {label}"
 
 st.set_page_config(layout="centered")
 setup_page(dark=st.get_option("theme.base") == "dark")
@@ -296,8 +296,9 @@ if st.button("Calcular Plano Recomendado"):
         )
 
     if resultado["bancos_base"]:
+        banco_label = "banco" if resultado["bancos_base"] == 1 else "bancos"
         st.markdown(
-            f"<p style='color:#000000;'>Bank Connector inclui {resultado['bancos_base']} banco(s) base.</p>",
+            f"<p style='color:#000000;'>Bank Connector inclui {resultado['bancos_base']} {banco_label} base.</p>",
             unsafe_allow_html=True,
         )
     pack5, pack10 = resultado.get("bank_packs", (0, 0))

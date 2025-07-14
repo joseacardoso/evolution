@@ -87,6 +87,12 @@ POS_LIMITS = {
     6: None,  # Ultimate has no limit
 }
 
+# Prices for additional Bank Connector packs
+BANK_PACK_PRICES = {
+    5: 200,
+    10: 380,
+}
+
 
 def setup_page(dark: bool = False) -> None:
     """Apply common Streamlit styling and logo."""

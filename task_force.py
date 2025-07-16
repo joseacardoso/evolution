@@ -156,9 +156,9 @@ else:
         pdf.cell(0, 10, "Simulação Plano Evolution - Task Force Cegid PHC", ln=True, align="C")
         pdf.ln(5)
 
-        colw = [120, 20]
         headers = ["Produto", "Qtd"]
-        pdf.set_font(font_name, "B", 10)
+        width_total = pdf.w - pdf.l_margin - pdf.r_margin
+        colw = [width_total - 20, 20]
         for w, h in zip(colw, headers):
             pdf.cell(w, 8, h, border=1, align="C")
         pdf.ln()
@@ -897,15 +897,21 @@ else:
                         )
                     )
     
+        nome_empresa = st.text_input("Nome empresa")
+
         pdf_bytes = gerar_pdf(linhas_pdf)
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
+
+        slug = normalize(nome_empresa).replace(" ", "_") if nome_empresa else ""
+        nome_orc = f"orcamento_{slug}.pdf" if slug else "orcamento.pdf"
+        nome_sim = f"simulacao_{slug}.pdf" if slug else "simulacao.pdf"
 
         col1, col2 = st.columns(2)
         with col1:
             st.download_button(
                 "Descarregar Orçamento (PDF)",
                 data=pdf_bytes,
-                file_name="orcamento.pdf",
+                file_name=nome_orc,
                 mime="application/pdf",
             )
 
@@ -913,7 +919,7 @@ else:
             st.download_button(
                 "Descarregar Simulação (PDF)",
                 data=pdf_simples_bytes,
-                file_name="simulacao.pdf",
+                file_name=nome_sim,
                 mime="application/pdf",
             )
 

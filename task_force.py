@@ -8,6 +8,35 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 __test__ = False
 import unicodedata
 from io import StringIO
+
+def parse_price(value: str) -> float:
+    """Convert a price string like '136,00 €' to a float."""
+    if value is None:
+        return 0.0
+
+    text = str(value).strip().replace("€", "").replace(" ", "")
+    text = text.replace(".", "").replace(",", ".")
+    try:
+        return float(text)
+    except ValueError:
+        return 0.0
+
+def load_precos_csv(path: str) -> dict[str, float]:
+    """Load a pricing CSV mapping refs to prices."""
+    if pd is None:
+        return {}
+    try:
+        df = pd.read_csv(path, sep=";")
+    except Exception:
+        return {}
+    precos = {}
+    for _, row in df.iterrows():
+        ref = str(row.get("ref", "")).strip()
+        preco = parse_price(row.get("Preco_Euros"))
+        if ref:
+            precos[ref] = preco
+    return precos
+
 if st is None or pd is None:
     def normalize(text: str) -> str:
         return str(text)
@@ -144,7 +173,7 @@ else:
 
         return pdf.output(dest="S").encode("latin-1")
     
-    st.title("Simulador de Plano PHC Evolution")
+    st.title("Simulador de Plano PHC Evolution - Task Force")
     
     
     # Área para colar tabela do Excel (opcional)
@@ -182,7 +211,12 @@ else:
         "Imobilizado",
     }
     WEB_ONLY_MODULES = {"Colaborador"}
-    
+
+    precos2024 = load_precos_csv("Precos2024.csv")
+    precos2025 = load_precos_csv("Precos2025.csv")
+    valor_on_2024 = 0.0
+    valor_on_2025 = 0.0
+
     if texto_tabela:
         try:
             df_import = pd.read_csv(StringIO(texto_tabela), sep=";")
@@ -197,6 +231,13 @@ else:
             df_import = pd.DataFrame()
     
         if not df_import.empty:
+            if "Referência" in df_import.columns:
+                for _, row in df_import.iterrows():
+                    ref = str(row.get("Referência", "")).strip()
+                    qtd = int(row.get("Quantidade", 0))
+                    valor_on_2024 += precos2024.get(ref, 0) * qtd
+                    valor_on_2025 += precos2025.get(ref, 0) * qtd
+
             ordem = {"corporate": 0, "advanced": 1, "enterprise": 2}
             if "Plano" in df_import.columns:
                 df_import["Plano"] = df_import["Plano"].astype(str).str.strip()
@@ -865,4 +906,12 @@ else:
             data=pdf_simples_bytes,
             file_name="simulacao.pdf",
             mime="application/pdf",
+        )
+
+        st.markdown("## Informação Task Force")
+        st.markdown(f"Valor Cegid PHC ON 2024: {format_euro(valor_on_2024)}")
+        st.markdown(f"Valor Cegid PHC ON 2025: {format_euro(valor_on_2025)}")
+        migra = valor_on_2024 * 1.2
+        st.markdown(
+            f"Proposta migração para Cegid PHC Evolution: {format_euro(migra)}"
         )

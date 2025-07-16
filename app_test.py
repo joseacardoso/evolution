@@ -201,6 +201,7 @@ else:
             tot_por_produto = {}
             rede_por_produto = {}
             web_por_produto = {}
+            mono_por_produto = {}
             inventario_flag = False
             inv_subs = {
                 "equipamentos",
@@ -228,6 +229,8 @@ else:
                 tot_por_produto[modulo_raw] = tot_por_produto.get(modulo_raw, 0) + quantidade
                 if "rede" in designacao:
                     rede_por_produto[modulo_raw] = rede_por_produto.get(modulo_raw, 0) + quantidade
+                if "mono" in designacao:
+                    mono_por_produto[modulo_raw] = mono_por_produto.get(modulo_raw, 0) + quantidade
                 prod3 = str(row.get("Produto3", "")).lower()
                 if "web" in designacao or "intranet" in designacao or "web" in prod3 or "intranet" in prod3:
                     web_por_produto[modulo_raw] = web_por_produto.get(modulo_raw, 0) + quantidade
@@ -239,6 +242,7 @@ else:
                     "Produto": list(tot_por_produto.keys()),
                     "Quantidade": [tot_por_produto[p] for p in tot_por_produto],
                     "Rede": [rede_por_produto.get(p, 0) for p in tot_por_produto],
+                    "Mono": [mono_por_produto.get(p, 0) for p in tot_por_produto],
                     "Web": [web_por_produto.get(p, 0) for p in tot_por_produto],
                 }
             )
@@ -328,9 +332,13 @@ else:
                 modulo = row["Produto"].strip()
                 total_mod = int(row["Quantidade"])
                 rede_mod = int(row.get("Rede", 0))
+                mono_mod = int(row.get("Mono", 0))
                 web_mod = int(row.get("Web", 0))
-                rede_users = rede_mod * (2 if plano_importado == 0 else 1)
-                module_total = max(0, total_mod - rede_mod + rede_users)
+                if plano_importado == 0:
+                    rede_users = rede_mod * 2 + mono_mod
+                else:
+                    rede_users = rede_mod + mono_mod
+                module_total = max(0, total_mod - rede_mod - mono_mod + rede_users)
                 desktop_count = max(0, module_total - web_mod)
                 modulo_lower = normalize(modulo)
                 if modulo_lower in ["gestao", "gestão"]:

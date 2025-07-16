@@ -493,7 +493,7 @@ else:
                         elif escolha in WEB_MODULES:
                             def_total = import_data.get(escolha, 0)
                             def_web = web_data.get(escolha, 0)
-                            def_desk = max(0, def_total - max(0, def_web - 1))
+                            def_desk = max(0, def_total - def_web)
                             cpd, cpw = st.columns(2)
                             with cpd:
                                 qtd_desk = st.number_input(
@@ -557,7 +557,7 @@ else:
                             elif modulo in WEB_MODULES:
                                 def_total = import_data.get(modulo, 0)
                                 def_web = web_data.get(modulo, 0)
-                                def_desk = max(0, def_total - max(0, def_web - 1))
+                                def_desk = max(0, def_total - def_web)
                                 cd, cw = st.columns(2)
                                 with cd:
                                     qtd_desk = st.number_input(

@@ -1,29 +1,31 @@
 import pandas as pd
 import streamlit as st
 from functools import lru_cache
+from pathlib import Path
 
-with open("style.css", encoding="utf-8") as f:
+_BASE_DIR = Path(__file__).resolve().parent
+
+with open(_BASE_DIR / "style.css", encoding="utf-8") as f:
     STYLE_LIGHT = f.read()
 
-with open("style_dark.css", encoding="utf-8") as f:
+with open(_BASE_DIR / "style_dark.css", encoding="utf-8") as f:
     STYLE_DARK = f.read()
+IMAGES_DIR = _BASE_DIR / "images"
 
-IMAGES_DIR = "images"
-
-LOGO_LIGHT_PATH = f"{IMAGES_DIR}/PHC Evolution.svg"
-LOGO_DARK_PATH = f"{IMAGES_DIR}/PHC Evolution_white.svg"
+LOGO_LIGHT_PATH = IMAGES_DIR / "PHC Evolution.svg"
+LOGO_DARK_PATH = IMAGES_DIR / "PHC Evolution_white.svg"
 
 
 @lru_cache(maxsize=None)
 def load_precos_planos() -> pd.DataFrame:
     """Load pricing table for plans with caching."""
-    return pd.read_csv("precos_planos.csv", sep=",")
+    return pd.read_csv(_BASE_DIR / "precos_planos.csv", sep=",")
 
 
 @lru_cache(maxsize=None)
 def load_precos_produtos() -> pd.DataFrame:
     """Load pricing table for modules with caching."""
-    return pd.read_csv("precos_produtos.csv", sep=",")
+    return pd.read_csv(_BASE_DIR / "precos_produtos.csv", sep=",")
 
 produtos = {
     "Funcionalidades Adicionais de Gestão": {

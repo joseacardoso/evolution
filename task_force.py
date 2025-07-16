@@ -676,7 +676,7 @@ else:
                         else:
                             selecoes[modulo] = 1
     
-    nome_empresa = st.text_input("Nome empresa")
+    nome_empresa = st.text_input("Cliente Final")
 
     # Lógica do plano
     if st.button("Calcular Plano Recomendado"):

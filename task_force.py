@@ -676,7 +676,6 @@ else:
                         else:
                             selecoes[modulo] = 1
     
-    cliente_final = st.text_input("Cliente Final")
 
     # Lógica do plano
     if st.button("Calcular Plano Recomendado"):
@@ -902,9 +901,8 @@ else:
         pdf_bytes = gerar_pdf(linhas_pdf)
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
 
-        slug = normalize(cliente_final).replace(" ", "_") if cliente_final else ""
-        nome_orc = f"orcamento_{slug}.pdf" if slug else "orcamento.pdf"
-        nome_sim = f"simulacao_{slug}.pdf" if slug else "simulacao.pdf"
+        nome_orc = "orcamento.pdf"
+        nome_sim = "simulacao.pdf"
 
         col1, col2 = st.columns(2)
         with col1:

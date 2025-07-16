@@ -279,6 +279,8 @@ else:
                 "doc eletro intranet": "Documentos",
                 "documentosextranet": "Documentos",
                 "documentos extranet": "Documentos",
+                "edibroker": "EDI Broker",
+                "ecommerceb2b": "Ecommerce B2B",
                 "genai": "GenAI",
                 "formacao": "Formação",
                 "imoveis": "Imóveis",
@@ -327,12 +329,13 @@ else:
                 total_mod = int(row["Quantidade"])
                 rede_mod = int(row.get("Rede", 0))
                 web_mod = int(row.get("Web", 0))
-                quantidade = max(0, total_mod - rede_mod)
-                desktop_count = max(0, quantidade - web_mod)
+                rede_users = rede_mod * (2 if plano_importado == 0 else 1)
+                module_total = max(0, total_mod - rede_mod + rede_users)
+                desktop_count = max(0, module_total - web_mod)
                 modulo_lower = normalize(modulo)
                 if modulo_lower in ["gestao", "gestão"]:
-                    utilizadores_importados = total_mod
-                    utilizadores_desk_importados = max(0, total_mod - web_mod + rede_mod)
+                    utilizadores_importados = module_total
+                    utilizadores_desk_importados = desktop_count
                     utilizadores_web_importados = web_mod
                     texto_full = " ".join(
                         [
@@ -349,10 +352,7 @@ else:
                     elif gestao_default_idx not in (0, 1):
                         gestao_default_idx = 2
                     continue
-                if web_mod:
-                    quantidade = desktop_count + max(0, web_mod - 1)
-                else:
-                    quantidade = desktop_count
+                quantidade = module_total
                 if modulo_lower in modulos_ignorados:
                     if modulo_lower in {
                         "consolidacao",

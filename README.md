@@ -4,7 +4,7 @@ This repository contains a Streamlit application.
 
 ## Setup
 
-It is recommended to use a virtual environment. After activating it, install the Python dependencies with:
+It is recommended to use a virtual environment with **Python 3.11**. After activating it, install the Python dependencies with:
 
 ```bash
 pip install -r requirements.txt

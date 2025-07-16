@@ -32,6 +32,7 @@ produtos = {
         "Frota": {"plano": 3, "per_user": False},
         "Denúncias": {"plano": 5, "per_user": False},
         "BPM": {"plano": 5, "per_user": False},
+        "Documentos": {"plano": 3, "per_user": False},
     },
     "Financeira": {
         "Contabilidade": {"plano": 3, "per_user": True},
@@ -42,6 +43,7 @@ produtos = {
         "Colaborador": {"plano": 5, "per_user": True, "web_only": True},
         "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
         "OKR": {"plano": 4, "per_user": True},
+        "SHST": {"plano": 3, "per_user": False},
     },
     "Extras e Setoriais": {
         "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},

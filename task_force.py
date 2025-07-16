@@ -676,6 +676,8 @@ else:
                         else:
                             selecoes[modulo] = 1
     
+    nome_empresa = st.text_input("Nome empresa")
+
     # Lógica do plano
     if st.button("Calcular Plano Recomendado"):
         resultado = calculate_plan(
@@ -897,8 +899,6 @@ else:
                         )
                     )
     
-        nome_empresa = st.text_input("Nome empresa")
-
         pdf_bytes = gerar_pdf(linhas_pdf)
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
 

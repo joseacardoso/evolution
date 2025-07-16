@@ -8,6 +8,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 __test__ = False
 import unicodedata
 from io import StringIO
+from pathlib import Path
 
 def parse_price(value: str) -> float:
     """Convert a price string like '136,00 €' to a float."""
@@ -26,9 +27,12 @@ def load_precos_csv(path: str) -> dict[str, float]:
     if pd is None:
         return {}
     try:
-        df = pd.read_csv(path, sep=";")
+        df = pd.read_csv(path, sep=";", encoding="latin-1")
     except Exception:
-        return {}
+        try:
+            df = pd.read_csv(path, sep=";")
+        except Exception:
+            return {}
     precos = {}
     for _, row in df.iterrows():
         ref = str(row.get("ref", "")).strip()
@@ -212,8 +216,9 @@ else:
     }
     WEB_ONLY_MODULES = {"Colaborador"}
 
-    precos2024 = load_precos_csv("Precos2024.csv")
-    precos2025 = load_precos_csv("Precos2025.csv")
+    base_dir = Path(__file__).resolve().parent
+    precos2024 = load_precos_csv(base_dir / "Precos2024.csv")
+    precos2025 = load_precos_csv(base_dir / "Precos2025.csv")
     valor_on_2024 = 0.0
     valor_on_2025 = 0.0
 
@@ -893,20 +898,24 @@ else:
                     )
     
         pdf_bytes = gerar_pdf(linhas_pdf)
-        st.download_button(
-            "Descarregar Or\u00e7amento (PDF)",
-            data=pdf_bytes,
-            file_name="orcamento.pdf",
-            mime="application/pdf",
-        )
-
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
-        st.download_button(
-            "Descarregar Simulação (PDF)",
-            data=pdf_simples_bytes,
-            file_name="simulacao.pdf",
-            mime="application/pdf",
-        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                "Descarregar Orçamento (PDF)",
+                data=pdf_bytes,
+                file_name="orcamento.pdf",
+                mime="application/pdf",
+            )
+
+        with col2:
+            st.download_button(
+                "Descarregar Simulação (PDF)",
+                data=pdf_simples_bytes,
+                file_name="simulacao.pdf",
+                mime="application/pdf",
+            )
 
         st.markdown("## Informação Task Force")
         st.markdown(f"Valor Cegid PHC ON 2024: {format_euro(valor_on_2024)}")

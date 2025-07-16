@@ -50,6 +50,28 @@
             line-height: 1.2 !important;
         }
 
+        .stDownloadButton>button {
+            background-color: #FF5C35 !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 0.4em 1.2em !important;
+            font-weight: bold !important;
+            font-size: 1rem !important;
+            display: block;
+            margin: 1.2em auto 1em auto !important;
+            width: auto;
+            max-width: 240px;
+            white-space: nowrap !important;
+            line-height: 1.2 !important;
+        }
+
+        .stDownloadButton>button:hover {
+            background-color: #cc4829 !important;
+            color: #FFFFFF !important;
+            transition: background-color 0.3s ease;
+        }
+
         .stButton>button:hover {
             background-color: #cc4829 !important;
             color: #FFFFFF !important;

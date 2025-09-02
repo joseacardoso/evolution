@@ -924,31 +924,28 @@ else:
             )
 
         st.markdown("## Informação Task Force")
-        st.markdown(f"Valor Cegid PHC ON 2024: {format_euro(valor_on_2024)}")
-        st.markdown(f"Valor Cegid PHC ON 2025: {format_euro(valor_on_2025)}")
-        migra = valor_on_2024 * 1.2
-        st.markdown(
-            f"Proposta migração para Cegid PHC Evolution: {format_euro(migra)}"
-        )
 
-        with st.expander("Simular condições de migração", expanded=False):
+        with st.expander("Simular condições de migração", expanded=True):
             valor1 = st.number_input(
-                "Previsão Valor Cegid PHC ON (Valores 2024)",
+                "Valor Cegid PHC ON 2024",
                 min_value=0,
                 step=1,
                 format="%d",
+                key="valor_on_2024_input",
             )
             valor2 = st.number_input(
-                "Previsão Valor Cegid PHC ON (Valores 2025)",
+                "Valor Cegid PHC ON 2025",
                 min_value=0,
                 step=1,
                 format="%d",
+                key="valor_on_2025_input",
             )
             valor3 = st.number_input(
-                "Previsão Valor Cegid PHC Evolution ⁽¹⁾ (com campanha Migração)",
+                "Proposta migração para Cegid PHC Evolution",
                 min_value=0,
                 step=1,
                 format="%d",
+                key="valor_evolution_migracao",
             )
 
             desconto = 0.0
@@ -968,7 +965,7 @@ else:
                     f"- {orig_prod}: {format_euro(orig_unit)} → {format_euro(unit_desc)}"
                 )
             st.download_button(
-                "Descarregar Simulação Migração (PDF)",
+                "Descarregar Migração (PDF)",
                 data=pdf_migracao_bytes,
                 file_name="simulacao_migracao.pdf",
                 mime="application/pdf",

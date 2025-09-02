@@ -678,8 +678,10 @@ else:
     
 
     # Lógica do plano
+    if "resultado" not in st.session_state:
+        st.session_state["resultado"] = None
     if st.button("Calcular Plano Recomendado"):
-        resultado = calculate_plan(
+        st.session_state["resultado"] = calculate_plan(
             plano_atual,
             tipo_gestao,
             utilizadores_desk,
@@ -689,6 +691,9 @@ else:
             extras_importados,
             extras_planos,
         )
+    if st.session_state.get("resultado"):
+        resultado = st.session_state["resultado"]
+
     
         for msg in resultado["warnings"]:
             st.warning(msg)
@@ -926,20 +931,6 @@ else:
         st.markdown("## Informação Task Force")
 
         with st.expander("Simular condições de migração", expanded=True):
-            valor1 = st.number_input(
-                "Valor Cegid PHC ON 2024",
-                min_value=0,
-                step=1,
-                format="%d",
-                key="valor_on_2024_input",
-            )
-            valor2 = st.number_input(
-                "Valor Cegid PHC ON 2025",
-                min_value=0,
-                step=1,
-                format="%d",
-                key="valor_on_2025_input",
-            )
             valor3 = st.number_input(
                 "Proposta migração para Cegid PHC Evolution",
                 min_value=0,

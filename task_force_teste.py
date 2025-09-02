@@ -922,8 +922,6 @@ else:
             )
 
         st.markdown("## Informação Task Force")
-        st.markdown(f"Valor Cegid PHC ON 2024: {format_euro(valor_on_2024)}")
-        st.markdown(f"Valor Cegid PHC ON 2025: {format_euro(valor_on_2025)}")
         migra = valor_on_2024 * 1.2
         st.markdown(
             f"Proposta migração para Cegid PHC Evolution: {format_euro(migra)}"

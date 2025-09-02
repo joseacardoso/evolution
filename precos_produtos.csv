@@ -113,30 +113,30 @@ Ecommerce B2B,3,399,0
 Ecommerce B2B,4,699,0
 Ecommerce B2B,5,699,0
 Ecommerce B2B,6,1099,0
-Orçamentação,1,0,0
-Orçamentação,2,0,0
-Orçamentação,3,599,89
-Orçamentação,4,899,129
-Orçamentação,5,899,129
-Orçamentação,6,1199,169
-Orçamentação + Medição,1,0,0
-Orçamentação + Medição,2,0,0
-Orçamentação + Medição,3,839,119
-Orçamentação + Medição,4,1249,169
-Orçamentação + Medição,5,1249,169
-Orçamentação + Medição,6,1679,234
-Orçamentação + Medição + Controlo,1,0,0
-Orçamentação + Medição + Controlo,2,0,0
-Orçamentação + Medição + Controlo,3,999,139
-Orçamentação + Medição + Controlo,4,1499,209
-Orçamentação + Medição + Controlo,5,1499,209
-Orçamentação + Medição + Controlo,6,1999,279
-Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,1,0,0
-Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,2,0,0
-Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,3,1139,159
-Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,4,1699,239
-Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,5,1699,239
-Full Project - Controlo + Medição + Orçamentação + Planeamento + Revisão de Preços,6,2299,319
+Projeto | Orçamentação,1,0,0
+Projeto | Orçamentação,2,0,0
+Projeto | Orçamentação,3,599,89
+Projeto | Orçamentação,4,899,129
+Projeto | Orçamentação,5,899,129
+Projeto | Orçamentação,6,1199,169
+Projeto | Orçamentação + Medição,1,0,0
+Projeto | Orçamentação + Medição,2,0,0
+Projeto | Orçamentação + Medição,3,839,119
+Projeto | Orçamentação + Medição,4,1249,169
+Projeto | Orçamentação + Medição,5,1249,169
+Projeto | Orçamentação + Medição,6,1679,234
+Projeto | Orçamentação + Medição + Controlo,1,0,0
+Projeto | Orçamentação + Medição + Controlo,2,0,0
+Projeto | Orçamentação + Medição + Controlo,3,999,139
+Projeto | Orçamentação + Medição + Controlo,4,1499,209
+Projeto | Orçamentação + Medição + Controlo,5,1499,209
+Projeto | Orçamentação + Medição + Controlo,6,1999,279
+Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços),1,0,0
+Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços),2,0,0
+Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços),3,1139,159
+Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços),4,1699,239
+Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços),5,1699,239
+Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços),6,2299,319
 Bank Connector,4,0,0
 Bank Connector,5,0,0
 Bank Connector,6,0,0

@@ -898,6 +898,8 @@ else:
                         )
                     )
     
+        total_evolution = sum(t for _p, _q, _u, t in linhas_pdf)
+
         pdf_bytes = gerar_pdf(linhas_pdf)
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
 
@@ -928,3 +930,49 @@ else:
         st.markdown(
             f"Proposta migração para Cegid PHC Evolution: {format_euro(migra)}"
         )
+
+        with st.expander("Simular condições de migração", expanded=False):
+            valor1 = st.number_input(
+                "Previsão Valor Cegid PHC ON (Valores 2024)",
+                min_value=0,
+                step=1,
+                format="%d",
+            )
+            valor2 = st.number_input(
+                "Previsão Valor Cegid PHC ON (Valores 2025)",
+                min_value=0,
+                step=1,
+                format="%d",
+            )
+            valor3 = st.number_input(
+                "Previsão Valor Cegid PHC Evolution ⁽¹⁾ (com campanha Migração)",
+                min_value=0,
+                step=1,
+                format="%d",
+            )
+
+            desconto = 0.0
+            if total_evolution and valor3:
+                desconto = (total_evolution - valor3) / total_evolution
+
+            linhas_migracao = [
+                (prod, qtd, unit * (1 - desconto), total * (1 - desconto))
+                for prod, qtd, unit, total in linhas_pdf
+            ]
+            pdf_migracao_bytes = gerar_pdf(linhas_migracao)
+            st.markdown("### Valores com desconto")
+            for (orig_prod, _q, orig_unit, _t), (_, _, unit_desc, _td) in zip(
+                linhas_pdf, linhas_migracao
+            ):
+                st.markdown(
+                    f"- {orig_prod}: {format_euro(orig_unit)} → {format_euro(unit_desc)}"
+                )
+            st.download_button(
+                "Descarregar Simulação Migração (PDF)",
+                data=pdf_migracao_bytes,
+                file_name="simulacao_migracao.pdf",
+                mime="application/pdf",
+            )
+            st.markdown(
+                f"O desconto calculado é de {desconto * 100:.0f}%.",
+            )

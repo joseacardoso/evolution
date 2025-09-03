@@ -1,4 +1,11 @@
 import streamlit as st
+
+if __name__ == "__main__" and not st.runtime.exists():  # pragma: no cover - CLI guard
+    import sys
+    import streamlit.web.cli as stcli
+
+    sys.argv = ["streamlit", "run", __file__] + sys.argv[1:]
+    sys.exit(stcli.main())
 from pathlib import Path
 from copy import deepcopy
 from common import BANK_PACK_PRICES, calculate_plan, produtos, setup_page

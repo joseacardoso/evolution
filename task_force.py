@@ -1,6 +1,12 @@
 try:
     import streamlit as st
     import pandas as pd
+    if __name__ == "__main__" and not st.runtime.exists():  # pragma: no cover - CLI guard
+        import sys
+        import streamlit.web.cli as stcli
+
+        sys.argv = ["streamlit", "run", __file__] + sys.argv[1:]
+        sys.exit(stcli.main())
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     st = None
     pd = None

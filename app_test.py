@@ -156,6 +156,7 @@ else:
     
     import_data = {}
     web_data = {}
+    pos_counts = None
     utilizadores_importados = None
     utilizadores_desk_importados = None
     utilizadores_web_importados = 0
@@ -284,6 +285,14 @@ else:
                     "Web": [web_por_produto.get(p, 0) for p in tot_por_produto],
                 }
             )
+
+            aliases_pos = {"pos", "restauracao", "ponto de venda", "pontos de venda"}
+            pos_tmp = []
+            for _, row in df_import.iterrows():
+                if normalize(row["Produto"]) in aliases_pos:
+                    pos_tmp.append(int(row["Quantidade"]))
+            if pos_tmp:
+                pos_counts = pos_tmp
     
             if inventario_flag:
                 import_data["Inventário Avançado"] = 1
@@ -421,9 +430,9 @@ else:
                     continue
                 modulo_nome = nome_map.get(modulo_lower, modulo)
                 if modulo_nome in modulos_validos:
-                    import_data[modulo_nome] = quantidade
+                    import_data[modulo_nome] = import_data.get(modulo_nome, 0) + quantidade
                     if web_mod:
-                        web_data[modulo_nome] = web_mod
+                        web_data[modulo_nome] = web_data.get(modulo_nome, 0) + web_mod
                 elif modulo_lower in extras_planos:
                     extras_importados.add(modulo_lower)
                 else:
@@ -641,6 +650,7 @@ else:
             web_data,
             extras_importados,
             extras_planos,
+            pos_counts,
         )
     
         for msg in resultado["warnings"]:
@@ -694,8 +704,9 @@ else:
         for modulo, custos in resultado["modulos_detalhe"].items():
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
             if modulo == "Ponto de Venda (POS/Restauração)" and pos_info:
-                ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
-                detalhes.append(("1º Ponto de Venda (POS/Restauração)", format_euro(preco_primeiro), False))
+                num_primeiros, ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+                for _ in range(num_primeiros):
+                    detalhes.append(("1º Ponto de Venda (POS/Restauração)", format_euro(preco_primeiro), False))
                 if ate_10 > 0:
                     total = ate_10 * preco_2_10
                     detalhes.append(
@@ -809,23 +820,24 @@ else:
         for modulo, custos in resultado['modulos_detalhe'].items():
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
 
-            if modulo == 'Ponto de Venda (POS/Restauração)' and pos_info:
-                ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+        if modulo == 'Ponto de Venda (POS/Restauração)' and pos_info:
+            num_primeiros, ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+            for _ in range(num_primeiros):
                 linhas_pdf.append(("1º Ponto de Venda (POS/Restauração)", 1, preco_primeiro, preco_primeiro))
-                if ate_10 > 0:
-                    linhas_pdf.append((
-                        f"  Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
-                        ate_10,
-                        preco_2_10,
-                        ate_10 * preco_2_10,
-                    ))
-                if acima_10 > 0:
-                    linhas_pdf.append((
-                        f"  Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
-                        acima_10,
-                        preco_maior_10,
-                        acima_10 * preco_maior_10,
-                    ))
+            if ate_10 > 0:
+                linhas_pdf.append((
+                    f"  Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
+                    ate_10,
+                    preco_2_10,
+                    ate_10 * preco_2_10,
+                ))
+            if acima_10 > 0:
+                linhas_pdf.append((
+                    f"  Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
+                    acima_10,
+                    preco_maior_10,
+                    acima_10 * preco_maior_10,
+                ))
             else:
                 linhas_pdf.append((modulo, 1, custo_base, custo_base))
 

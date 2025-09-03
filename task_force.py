@@ -872,42 +872,42 @@ else:
         for modulo, custos in resultado['modulos_detalhe'].items():
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
 
-        if modulo == 'Ponto de Venda (POS/Restauração)' and pos_info:
-            num_primeiros, ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
-            for _ in range(num_primeiros):
-                linhas_pdf.append(("1º Ponto de Venda (POS/Restauração)", 1, preco_primeiro, preco_primeiro))
-            if ate_10 > 0:
-                linhas_pdf.append((
-                    f"  Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
-                    ate_10,
-                    preco_2_10,
-                    ate_10 * preco_2_10,
-                ))
-            if acima_10 > 0:
-                linhas_pdf.append((
-                    f"  Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
-                    acima_10,
-                    preco_maior_10,
-                    acima_10 * preco_maior_10,
-                ))
-        else:
-            linhas_pdf.append((modulo, 1, custo_base, custo_base))
+            if modulo == 'Ponto de Venda (POS/Restauração)' and pos_info:
+                num_primeiros, ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+                for _ in range(num_primeiros):
+                    linhas_pdf.append(("1º Ponto de Venda (POS/Restauração)", 1, preco_primeiro, preco_primeiro))
+                if ate_10 > 0:
+                    linhas_pdf.append((
+                        f"  Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
+                        ate_10,
+                        preco_2_10,
+                        ate_10 * preco_2_10,
+                    ))
+                if acima_10 > 0:
+                    linhas_pdf.append((
+                        f"  Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
+                        acima_10,
+                        preco_maior_10,
+                        acima_10 * preco_maior_10,
+                    ))
+            else:
+                linhas_pdf.append((modulo, 1, custo_base, custo_base))
 
-                if custo_desk > 0:
-                    unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
-                    texto_extra = format_additional_users(qtd_desk, 'Desktop')
-                    linhas_pdf.append(
-                        (
-                            f"  {modulo} ({texto_extra})",
-                            qtd_desk,
-                            unit_extra,
-                            custo_desk,
-                        )
+            if custo_desk > 0:
+                unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
+                texto_extra = format_additional_users(qtd_desk, 'Desktop')
+                linhas_pdf.append(
+                    (
+                        f"  {modulo} ({texto_extra})",
+                        qtd_desk,
+                        unit_extra,
+                        custo_desk,
                     )
-                if custo_web > 0:
-                    unit_extra = custo_web / qtd_web if qtd_web else custo_web
-                    linhas_pdf.append(
-                        (
+                )
+            if custo_web > 0:
+                unit_extra = custo_web / qtd_web if qtd_web else custo_web
+                linhas_pdf.append(
+                    (
                             f"  {modulo} ({format_additional_users(qtd_web, 'Web')})",
                             qtd_web,
                             unit_extra,

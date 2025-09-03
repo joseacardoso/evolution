@@ -133,6 +133,7 @@ def calculate_plan(
     web_selecoes: dict[str, int] | None = None,
     extras_importados: set[str] | None = None,
     extras_planos: dict[str, int] | None = None,
+    pos_counts: list[int] | None = None,
 ) -> dict:
     """Return planning information based on selections."""
     extras_importados = extras_importados or set()
@@ -272,13 +273,22 @@ def calculate_plan(
             preco_maior_10 = preco_produtos.get(("POS (>10)", plano_final), (0, 0))[1]
 
             if quantidade > 0:
-                restantes = quantidade - 1
-                ate_10 = min(restantes, 9)
-                acima_10 = max(restantes - 9, 0)
-                custo_base = preco_primeiro
+                grupos = pos_counts if pos_counts is not None else [quantidade]
+                extras_grupos = [max(q - 1, 0) for q in grupos]
+                num_primeiros = len(grupos)
+                ate_10 = sum(min(e, 9) for e in extras_grupos)
+                acima_10 = sum(max(e - 9, 0) for e in extras_grupos)
+                custo_base = num_primeiros * preco_primeiro
                 custo_extra = ate_10 * preco_2_10 + acima_10 * preco_maior_10
                 qtd_desk = ate_10 + acima_10
-                pos_breakdown = (ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10)
+                pos_breakdown = (
+                    num_primeiros,
+                    ate_10,
+                    acima_10,
+                    preco_primeiro,
+                    preco_2_10,
+                    preco_maior_10,
+                )
             else:
                 custo_base = 0
                 custo_extra = 0

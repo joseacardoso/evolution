@@ -144,3 +144,28 @@ def test_pos_plan_limit(common):
     )
     # 6 postos requerem o plano Advanced (10 postos)
     assert result["plano_final"] == 4
+
+
+def test_pos_restauracao_counts_separate(common):
+    result = common.calculate_plan(
+        "Enterprise",
+        None,
+        1,
+        0,
+        {"Ponto de Venda (POS/Restauração)": 4},
+        pos_counts=[1, 3],
+    )
+    preco_primeiro = float(read_module_row("POS (1º)", 6)["preco_base"])
+    preco_2_10 = float(read_module_row("POS (2 a 10)", 6)["preco_unidade"])
+    detalhes = result["modulos_detalhe"]["Ponto de Venda (POS/Restauração)"]
+    assert detalhes == (
+        preco_primeiro * 2,
+        preco_2_10 * 2,
+        0,
+        2,
+        0,
+    )
+    num_primeiros, ate_10, acima_10, *_ = result["pos_breakdown"]
+    assert num_primeiros == 2
+    assert ate_10 == 2
+    assert acima_10 == 0

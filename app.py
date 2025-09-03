@@ -251,8 +251,9 @@ if st.button("Calcular Plano Recomendado"):
     for modulo, custos in resultado["modulos_detalhe"].items():
         custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
         if modulo == "Ponto de Venda (POS/Restauração)" and pos_info:
-            ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
-            detalhes.append(("1º Ponto de Venda (POS/Restauração)", format_euro(preco_primeiro), False))
+            num_primeiros, ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+            for _ in range(num_primeiros):
+                detalhes.append(("1º Ponto de Venda (POS/Restauração)", format_euro(preco_primeiro), False))
             if ate_10 > 0:
                 total = ate_10 * preco_2_10
                 detalhes.append(

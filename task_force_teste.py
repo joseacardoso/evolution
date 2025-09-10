@@ -916,6 +916,8 @@ else:
                         )
                     )
     
+        total_evolution = sum(t for _p, _q, _u, t in linhas_pdf)
+
         pdf_bytes = gerar_pdf(linhas_pdf)
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
 
@@ -940,6 +942,9 @@ else:
             )
 
         st.markdown("## Informação Task Force")
+        st.markdown(f"Valor ON 2024: {format_euro(valor_on_2024)}")
+        st.markdown(f"Valor ON 2025: {format_euro(valor_on_2025)}")
+        st.markdown(f"Valor Evolution: {format_euro(total_evolution)}")
         migra = valor_on_2024 * 1.2
         st.markdown(
             f"Proposta migração para Cegid PHC Evolution: {format_euro(migra)}"

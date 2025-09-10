@@ -947,6 +947,9 @@ else:
             )
 
         st.markdown("## Informação Task Force")
+        st.markdown(f"Valor ON 2024: {format_euro(valor_on_2024)}")
+        st.markdown(f"Valor ON 2025: {format_euro(valor_on_2025)}")
+        st.markdown(f"Valor Evolution: {format_euro(total_evolution)}")
 
         with st.expander("Simular condições de migração", expanded=True):
             valor3 = st.number_input(

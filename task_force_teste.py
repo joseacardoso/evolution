@@ -13,7 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 
 __test__ = False
 import unicodedata
-from io import BytesIO, StringIO
+from io import StringIO
 from pathlib import Path
 
 def parse_price(value: str) -> float:
@@ -183,19 +183,6 @@ else:
 
         return pdf.output(dest="S").encode("latin-1")
 
-    def gerar_excel(linhas: list[tuple[str, int, float, float]]) -> bytes:
-        df = pd.DataFrame(linhas, columns=["Produto", "Qtd", "Valor Unit.", "Total"])
-        buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Orçamento")
-        return buffer.getvalue()
-
-    def gerar_excel_sem_preco(linhas: list[tuple[str, int]]) -> bytes:
-        df = pd.DataFrame(linhas, columns=["Produto", "Qtd"])
-        buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Simulação")
-        return buffer.getvalue()
     
     st.title("Simulador de Plano PHC Evolution - Task Force")
     
@@ -887,62 +874,62 @@ else:
         for modulo, custos in resultado['modulos_detalhe'].items():
             custo_base, custo_desk, custo_web, qtd_desk, qtd_web = custos
 
-        if modulo == 'Ponto de Venda (POS/Restauração)' and pos_info:
-            num_primeiros, ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
-            for _ in range(num_primeiros):
-                linhas_pdf.append(("1º Ponto de Venda (POS/Restauração)", 1, preco_primeiro, preco_primeiro))
-            if ate_10 > 0:
-                linhas_pdf.append((
-                    f"  Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
-                    ate_10,
-                    preco_2_10,
-                    ate_10 * preco_2_10,
-                ))
-            if acima_10 > 0:
-                linhas_pdf.append((
-                    f"  Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
-                    acima_10,
-                    preco_maior_10,
-                    acima_10 * preco_maior_10,
-                ))
+            if modulo == 'Ponto de Venda (POS/Restauração)' and pos_info:
+                num_primeiros, ate_10, acima_10, preco_primeiro, preco_2_10, preco_maior_10 = pos_info
+                for _ in range(num_primeiros):
+                    linhas_pdf.append(("1º Ponto de Venda (POS/Restauração)", 1, preco_primeiro, preco_primeiro))
+                if ate_10 > 0:
+                    linhas_pdf.append(
+                        (
+                            f"  Ponto de Venda (POS/Restauração) - ({format_postos(ate_10, adicional=True)} - Escalão de 2 a 10)",
+                            ate_10,
+                            preco_2_10,
+                            ate_10 * preco_2_10,
+                        )
+                    )
+                if acima_10 > 0:
+                    linhas_pdf.append(
+                        (
+                            f"  Ponto de Venda (POS/Restauração) - ({format_postos(acima_10, adicional=True)} - Escalão de 11 a 50)",
+                            acima_10,
+                            preco_maior_10,
+                            acima_10 * preco_maior_10,
+                        )
+                    )
             else:
                 linhas_pdf.append((modulo, 1, custo_base, custo_base))
 
-                if custo_desk > 0:
-                    unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
-                    texto_extra = format_additional_users(qtd_desk, 'Desktop')
-                    linhas_pdf.append(
-                        (
-                            f"  {modulo} ({texto_extra})",
-                            qtd_desk,
-                            unit_extra,
-                            custo_desk,
-                        )
+            if custo_desk > 0:
+                unit_extra = custo_desk / qtd_desk if qtd_desk else custo_desk
+                texto_extra = format_additional_users(qtd_desk, 'Desktop')
+                linhas_pdf.append(
+                    (
+                        f"  {modulo} ({texto_extra})",
+                        qtd_desk,
+                        unit_extra,
+                        custo_desk,
                     )
-                if custo_web > 0:
-                    unit_extra = custo_web / qtd_web if qtd_web else custo_web
-                    linhas_pdf.append(
-                        (
-                            f"  {modulo} ({format_additional_users(qtd_web, 'Web')})",
-                            qtd_web,
-                            unit_extra,
-                            custo_web,
-                        )
+                )
+            if custo_web > 0:
+                unit_extra = custo_web / qtd_web if qtd_web else custo_web
+                linhas_pdf.append(
+                    (
+                        f"  {modulo} ({format_additional_users(qtd_web, 'Web')})",
+                        qtd_web,
+                        unit_extra,
+                        custo_web,
                     )
+                )
     
         total_evolution = sum(t for _p, _q, _u, t in linhas_pdf)
 
         pdf_bytes = gerar_pdf(linhas_pdf)
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
-        excel_bytes = gerar_excel(linhas_pdf)
-        excel_simples_bytes = gerar_excel_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
 
         nome_orc = "orcamento.pdf"
         nome_sim = "simulacao.pdf"
-        nome_orc_xls = "orcamento.xlsx"
-        nome_sim_xls = "simulacao.xlsx"
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2 = st.columns(2)
         with col1:
             st.download_button(
                 "Descarregar Orçamento (PDF)",
@@ -952,24 +939,10 @@ else:
             )
         with col2:
             st.download_button(
-                "Descarregar Orçamento (Excel)",
-                data=excel_bytes,
-                file_name=nome_orc_xls,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-        with col3:
-            st.download_button(
                 "Descarregar Simulação (PDF)",
                 data=pdf_simples_bytes,
                 file_name=nome_sim,
                 mime="application/pdf",
-            )
-        with col4:
-            st.download_button(
-                "Descarregar Simulação (Excel)",
-                data=excel_simples_bytes,
-                file_name=nome_sim_xls,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
         st.markdown("## Informação Task Force")

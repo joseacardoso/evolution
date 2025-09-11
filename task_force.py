@@ -13,7 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 
 __test__ = False
 import unicodedata
-from io import StringIO
+from io import BytesIO, StringIO
 from pathlib import Path
 
 def parse_price(value: str) -> float:
@@ -182,6 +182,20 @@ else:
             pdf.ln(row_height)
 
         return pdf.output(dest="S").encode("latin-1")
+
+    def gerar_excel(linhas: list[tuple[str, int, float, float]]) -> bytes:
+        df = pd.DataFrame(linhas, columns=["Produto", "Qtd", "Valor Unit.", "Total"])
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Orçamento")
+        return buffer.getvalue()
+
+    def gerar_excel_sem_preco(linhas: list[tuple[str, int]]) -> bytes:
+        df = pd.DataFrame(linhas, columns=["Produto", "Qtd"])
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Simulação")
+        return buffer.getvalue()
     
     st.title("Simulador de Plano PHC Evolution - Task Force")
     
@@ -925,11 +939,15 @@ else:
 
         pdf_bytes = gerar_pdf(linhas_pdf)
         pdf_simples_bytes = gerar_pdf_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
+        excel_bytes = gerar_excel(linhas_pdf)
+        excel_simples_bytes = gerar_excel_sem_preco([(p, q) for p, q, _u, _t in linhas_pdf])
 
         nome_orc = "orcamento.pdf"
         nome_sim = "simulacao.pdf"
+        nome_orc_xls = "orcamento.xlsx"
+        nome_sim_xls = "simulacao.xlsx"
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.download_button(
                 "Descarregar Orçamento (PDF)",
@@ -937,13 +955,26 @@ else:
                 file_name=nome_orc,
                 mime="application/pdf",
             )
-
         with col2:
+            st.download_button(
+                "Descarregar Orçamento (Excel)",
+                data=excel_bytes,
+                file_name=nome_orc_xls,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        with col3:
             st.download_button(
                 "Descarregar Simulação (PDF)",
                 data=pdf_simples_bytes,
                 file_name=nome_sim,
                 mime="application/pdf",
+            )
+        with col4:
+            st.download_button(
+                "Descarregar Simulação (Excel)",
+                data=excel_simples_bytes,
+                file_name=nome_sim_xls,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
         st.markdown("## Informação Task Force")

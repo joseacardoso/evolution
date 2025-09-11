@@ -134,6 +134,11 @@ def test_web_only_module(common):
     )
 
 
+def test_zero_cost_module_included(common):
+    result = common.calculate_plan("Enterprise", None, 1, 0, {"Logística": 1})
+    assert result["modulos_detalhe"]["Logística"] == (0, 0, 0, 0, 0)
+
+
 def test_pos_plan_limit(common):
     result = common.calculate_plan(
         "Corporate",

@@ -326,15 +326,14 @@ def calculate_plan(
                 qtd_desk = qtd_web = 0
 
         custo_extra = custo_extra_desk + custo_extra_web
-        if custo_base or custo_extra:
-            custo_modulos += custo_base + custo_extra
-            modulos_detalhe[modulo] = (
-                custo_base,
-                custo_extra_desk,
-                custo_extra_web,
-                qtd_desk,
-                qtd_web,
-            )
+        custo_modulos += custo_base + custo_extra
+        modulos_detalhe[modulo] = (
+            custo_base,
+            custo_extra_desk,
+            custo_extra_web,
+            qtd_desk,
+            qtd_web,
+        )
 
     custo_estimado = preco_base + custo_extra_utilizadores + custo_modulos
 

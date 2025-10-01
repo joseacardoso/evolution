@@ -293,6 +293,8 @@ else:
             tot_por_produto = {}
             rede_por_produto = {}
             web_por_produto = {}
+            produto_base_map: dict[str, set[str]] = {}
+            gestao_context_map: dict[str, list[str]] = {}
             mono_por_produto = {}
             inventario_flag = False
             inv_subs = {
@@ -317,6 +319,19 @@ else:
                 modulo_raw = str(row.get(sub_col, row["Produto"])).strip()
                 quantidade = int(row["Quantidade"])
                 designacao = str(row.get("Designação", "")).lower()
+
+                base_produto = str(row.get("Produto", "")).strip()
+                produto_base_map.setdefault(modulo_raw, set()).add(base_produto)
+
+                contexto_partes = [
+                    str(row.get("Designação", "")),
+                    base_produto,
+                    modulo_raw,
+                    str(row.get("Produto3", "")),
+                ]
+                gestao_context_map.setdefault(modulo_raw, []).append(
+                    " ".join(p for p in contexto_partes if p).strip()
+                )
 
                 tot_por_produto[modulo_raw] = tot_por_produto.get(modulo_raw, 0) + quantidade
                 if "rede" in designacao:
@@ -441,18 +456,25 @@ else:
                 module_total = max(0, total_mod - rede_mod - mono_mod + rede_users)
                 desktop_count = max(0, module_total - web_mod)
                 modulo_lower = normalize(modulo)
-                if modulo_lower in ["gestao", "gestão"]:
+                base_produtos = produto_base_map.get(modulo, set())
+                is_gestao_base = any(normalize(p) in {"gestao", "gestão"} for p in base_produtos)
+                if modulo_lower in ["gestao", "gestão"] or is_gestao_base:
                     utilizadores_importados = module_total
                     utilizadores_desk_importados = desktop_count
                     utilizadores_web_importados = web_mod
-                    texto_full = " ".join(
-                        [
-                            str(row.get("Designação", "")),
-                            modulo,
-                            str(row.get(sub_col, "")),
-                            str(row.get("Produto3", "")),
-                        ]
-                    ).lower()
+                    contexto_list = gestao_context_map.get(modulo, [])
+                    if contexto_list:
+                        texto_full = normalize(" ".join(contexto_list))
+                    else:
+                        texto_full = " ".join(
+                            [
+                                str(row.get("Designação", "")),
+                                modulo,
+                                str(row.get(sub_col, "")),
+                                str(row.get("Produto3", "")),
+                            ]
+                        )
+                        texto_full = normalize(texto_full)
                     if "terceir" in texto_full:
                         gestao_default_idx = 1
                     elif "client" in texto_full or "fatur" in texto_full:

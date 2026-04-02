@@ -1,45 +1,46 @@
-# Publicar este projeto num novo repositório
+# Publicar este projeto no repositório `primavera-evolution-simulator`
 
-Sim — o projeto está pronto para ser colocado num novo repositório.
+Perfeito — como já criaste o repositório, basta ligar este projeto ao remote novo e fazer push.
 
-## 1) Criar repositório vazio (GitHub)
+## 1) Definir o remote `origin`
 
-No GitHub, cria um novo repositório (ex.: `primavera-evolution-simulator`) **sem** README inicial.
-
-## 2) Atualizar o remote local
-
+### SSH
 ```bash
-git remote rename origin old-origin
 git remote add origin git@github.com:<teu-user>/primavera-evolution-simulator.git
 ```
 
-Se preferires HTTPS:
-
+### HTTPS
 ```bash
 git remote add origin https://github.com/<teu-user>/primavera-evolution-simulator.git
 ```
 
-## 3) Enviar branch principal
+> Se já existir um `origin`, substitui por:
+```bash
+git remote set-url origin git@github.com:<teu-user>/primavera-evolution-simulator.git
+```
+
+## 2) Publicar a branch atual como `main`
 
 ```bash
 git push -u origin HEAD:main
 ```
 
+## 3) Publicar atualizações seguintes
+
+```bash
+git push
+```
+
 ## 4) (Opcional) Publicar app no Streamlit Community Cloud
 
 1. Ir a https://share.streamlit.io/
-2. Ligar o novo repositório
+2. Ligar o repositório `primavera-evolution-simulator`
 3. Definir `app.py` como entrypoint
 4. Deploy
 
-## 5) Comando completo (atalho)
+## Atalho (SSH)
 
 ```bash
-git remote rename origin old-origin && \
-  git remote add origin git@github.com:<teu-user>/primavera-evolution-simulator.git && \
+git remote add origin git@github.com:<teu-user>/primavera-evolution-simulator.git && \
   git push -u origin HEAD:main
 ```
-
----
-
-Se quiseres, no próximo passo eu também te deixo um `README` já pronto para esse novo repositório com descrição comercial (OnPrem vs Cloud, regras e pricing base).

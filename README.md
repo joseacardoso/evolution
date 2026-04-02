@@ -22,6 +22,8 @@ Or start the Primavera app with:
 streamlit run app_primavera.py
 ```
 
+> Nota: a lógica/pricing do Primavera foi atualizada com base na tabela de fevereiro de 2026 (On-Premises anual e Cloud mensal).
+
 ## Logos
 
 Create a folder named `images` in the repository root (already added) and add the

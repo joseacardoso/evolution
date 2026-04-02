@@ -30,6 +30,8 @@ def _load_style(dark: bool) -> str:
     return (_BASE_DIR / style_file).read_text(encoding="utf-8")
 
 
+
+
 IMAGES_DIR = _BASE_DIR / "images"
 LOGO_LIGHT_PATH = IMAGES_DIR / "PHC Evolution.svg"
 LOGO_DARK_PATH = IMAGES_DIR / "PHC Evolution_white.svg"

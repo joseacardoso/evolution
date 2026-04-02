@@ -1,5 +1,9 @@
 # Evolution App (PHC + Primavera)
 
+This repository contains two Streamlit applications, one per product:
+
+- `app.py` (default) → PHC Evolution simulator
+- `app_primavera.py` → Primavera Evolution simulator
 This repository contains a Streamlit application to simulate both PHC Evolution and Primavera Evolution plan recommendations.
 
 ## Setup
@@ -10,6 +14,7 @@ It is recommended to use a virtual environment with **Python 3.11**. After activ
 pip install -r requirements.txt
 ```
 
+Then start the PHC app (default) with:
 Then start the PHC app with:
 
 ```bash

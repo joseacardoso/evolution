@@ -10,10 +10,16 @@ It is recommended to use a virtual environment with **Python 3.11**. After activ
 pip install -r requirements.txt
 ```
 
-Then start the app with:
+Then start the PHC app with:
 
 ```bash
-streamlit run app.py
+streamlit run app_phc.py
+```
+
+Or start the Primavera app with:
+
+```bash
+streamlit run app_primavera.py
 ```
 
 ## Logos

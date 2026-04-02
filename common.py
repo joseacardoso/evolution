@@ -1,124 +1,52 @@
-import pandas as pd
-import streamlit as st
 from functools import lru_cache
 from pathlib import Path
 
+import streamlit as st
+
+from phc_logic import (  # backward compatibility exports
+    BANK_PACK_PRICES,
+    POS_LIMITS,
+    WEB_MODULES,
+    WEB_ONLY_MODULES,
+    calculate_plan,
+    load_precos_planos,
+    load_precos_produtos,
+    produtos,
+)
+from primavera_logic import (
+    PRIMAVERA_ADDONS,
+    PRIMAVERA_CLOUD_ALLOWED,
+    PRIMAVERA_ONPREM_MIN_PLAN,
+    PRIMAVERA_PLANS,
+    calculate_primavera_plan,
+)
+
 _BASE_DIR = Path(__file__).resolve().parent
 
-with open(_BASE_DIR / "style.css", encoding="utf-8") as f:
-    STYLE_LIGHT = f.read()
 
-with open(_BASE_DIR / "style_dark.css", encoding="utf-8") as f:
-    STYLE_DARK = f.read()
+@lru_cache(maxsize=None)
+def _load_style(dark: bool) -> str:
+    style_file = "style_dark.css" if dark else "style.css"
+    return (_BASE_DIR / style_file).read_text(encoding="utf-8")
+
+
 IMAGES_DIR = _BASE_DIR / "images"
-
 LOGO_LIGHT_PATH = IMAGES_DIR / "PHC Evolution.svg"
 LOGO_DARK_PATH = IMAGES_DIR / "PHC Evolution_white.svg"
 
 
-@lru_cache(maxsize=None)
-def load_precos_planos() -> pd.DataFrame:
-    """Load pricing table for plans with caching."""
-    return pd.read_csv(_BASE_DIR / "precos_planos.csv", sep=",")
-
-
-@lru_cache(maxsize=None)
-def load_precos_produtos() -> pd.DataFrame:
-    """Load pricing table for modules with caching."""
-    return pd.read_csv(_BASE_DIR / "precos_produtos.csv", sep=",")
-
-produtos = {
-    "Funcionalidades Adicionais de Gestão": {
-        "Inventário Avançado": {"plano": 3, "per_user": False},
-        "Logística": {"plano": 5, "per_user": False},
-        "Frota": {"plano": 3, "per_user": False},
-        "Denúncias": {"plano": 5, "per_user": False},
-        "BPM": {"plano": 5, "per_user": False},
-        "Documentos": {"plano": 3, "per_user": False},
-    },
-    "Financeira": {
-        "Contabilidade": {"plano": 3, "per_user": True},
-        "Imobilizado": {"plano": 3, "per_user": True},
-    },
-    "Recursos Humanos": {
-        "Vencimento": {"plano": 3, "per_user": True},
-        "Colaborador": {"plano": 5, "per_user": True, "web_only": True},
-        "Careers c/ Recrutamento": {"plano": 5, "per_user": True},
-        "OKR": {"plano": 4, "per_user": True},
-        "SHST": {"plano": 3, "per_user": False},
-    },
-    "Extras e Setoriais": {
-        "Ponto de Venda (POS/Restauração)": {"plano": 1, "per_user": True},
-        "Suporte": {"plano": 2, "per_user": True},
-        "CRM": {"plano": 3, "per_user": True},
-        "Equipa": {"plano": 3, "per_user": True},
-        "Ecommerce B2B": {"plano": 3, "per_user": False},
-    },
-    "Projeto": {
-        "Projeto | Orçamentação": {"plano": 3, "per_user": True},
-        "Projeto | Orçamentação + Medição": {"plano": 3, "per_user": True},
-        "Projeto | Orçamentação + Medição + Controlo": {"plano": 3, "per_user": True},
-        "Projeto | Full Project (Orçamentação + Medição + Controlo + Planeamento + Revisão de Preços)": {
-            "plano": 3,
-            "per_user": True,
-        },
-    },
-    "Connected Services": {
-        "Bank Connector": {"plano": 4, "per_user": False},
-        "EDI Broker": {"plano": 1, "per_user": False},
-    },
-}
-
-WEB_MODULES = {
-    "CRM",
-    "Suporte",
-    "Equipa",
-    "Careers c/ Recrutamento",
-    "Vencimento",
-    "Contabilidade",
-    "Imobilizado",
-}
-
-WEB_ONLY_MODULES = {"Colaborador"}
-
-# Maximum number of POS stations allowed per plan
-POS_LIMITS = {
-    1: 1,   # Essentials
-    2: 2,   # Standard
-    3: 5,   # Plus
-    4: 10,  # Advanced
-    5: 50,  # Premium
-    6: None,  # Ultimate has no limit
-}
-
-# Prices for additional Bank Connector packs
-BANK_PACK_PRICES = {
-    5: 200,
-    10: 380,
-}
-
-
 def setup_page(dark: bool = False) -> None:
     """Apply common Streamlit styling and logo."""
-    style = STYLE_DARK if dark else STYLE_LIGHT
+    style = _load_style(dark)
     logo_path = LOGO_DARK_PATH if dark else LOGO_LIGHT_PATH
     st.markdown(style, unsafe_allow_html=True)
-    # Streamlit can't load SVG files with ``st.image``, so read the file
-    # content and embed it directly in the page.
     with open(logo_path, encoding="utf-8") as f:
         logo_svg = f.read()
     st.markdown(f'<div class="logo-container">{logo_svg}</div>', unsafe_allow_html=True)
 
 
 def format_euro(valor: float, *, pdf: bool = False) -> str:
-    """Return ``valor`` formatted in euros.
-
-    The formatting uses a dot as the thousands separator followed by a
-    trailing Euro symbol.  When ``pdf`` is ``True`` the Euro sign is returned
-    as the Windows‑1252 code point (``chr(128)``) so that ``fpdf`` can encode
-    it correctly when using the built‑in fonts.
-    """
-
+    """Return ``valor`` formatted in euros."""
     valor_str = f"{int(round(valor)):,}".replace(",", ".")
     symbol = chr(128) if pdf else "€"
     return f"{valor_str} {symbol}"

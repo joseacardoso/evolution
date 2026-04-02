@@ -1,6 +1,6 @@
-# Evolution App
+# Primavera Evolution App
 
-This repository contains a Streamlit application.
+This repository contains a Streamlit application to simulate Primavera Evolution plan recommendations (OnPrem and Cloud).
 
 ## Setup
 
@@ -21,8 +21,8 @@ streamlit run app.py
 Create a folder named `images` in the repository root (already added) and add the
 two logo files there:
 
-- `PHC Evolution.svg` for the light theme
-- `PHC Evolution_white.svg` for the dark theme
+- `Primavera Evolution.svg` for the light theme
+- `Primavera Evolution_white.svg` for the dark theme
 
 The application will automatically pick the correct image depending on the theme
 selected in Streamlit.

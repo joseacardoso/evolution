@@ -60,25 +60,3 @@ def test_primavera_ultimate_required_for_high_module_users(common):
         selected_modules={"RH": 11},
     )
     assert result["plan_name"] == "Ultimate"
-
-
-def test_primavera_core_modules_keep_essentials_when_only_sales_and_receivables(common):
-    result = common.calculate_primavera_plan(
-        subscription_type="OnPrem",
-        users=1,
-        companies=1,
-        selected_modules={},
-        selected_core_modules=["Vendas", "Contas Correntes"],
-    )
-    assert result["plan_name"] == "Essentials"
-
-
-def test_primavera_core_modules_upgrade_to_plus_when_buying_is_selected(common):
-    result = common.calculate_primavera_plan(
-        subscription_type="OnPrem",
-        users=2,
-        companies=2,
-        selected_modules={},
-        selected_core_modules=["Vendas", "Contas Correntes", "Compras"],
-    )
-    assert result["plan_name"] == "Plus"

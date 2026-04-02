@@ -1,6 +1,6 @@
-# Primavera Evolution App
+# Evolution App (PHC + Primavera)
 
-This repository contains a Streamlit application to simulate Primavera Evolution plan recommendations (OnPrem and Cloud).
+This repository contains a Streamlit application to simulate both PHC Evolution and Primavera Evolution plan recommendations.
 
 ## Setup
 

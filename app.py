@@ -24,6 +24,19 @@ def format_additional_users(qtd: int, tipo: str | None = None) -> str:
 def format_full_users(qtd: int) -> str:
     return "1 Full User" if qtd == 1 else f"{qtd} Full Users"
 
+from common import (
+    PRIMAVERA_ADDONS,
+    PRIMAVERA_PLANS,
+    calculate_primavera_plan,
+    format_euro,
+    setup_page,
+)
+
+st.set_page_config(layout="centered")
+setup_page(dark=st.get_option("theme.base") == "dark")
+
+st.title("Simulador de Plano Primavera Evolution")
+st.caption("Subscrição OnPrem e Cloud com regras de disponibilidade por plano.")
 
 def format_postos(qtd: int, *, adicional: bool = False) -> str:
     label = "Posto" if qtd == 1 else "Postos"
@@ -172,3 +185,78 @@ st.set_page_config(layout="centered")
 setup_page(dark=st.get_option("theme.base") == "dark")
 st.title("Simulador PHC Evolution")
 render_phc()
+subscription_type = st.radio(
+    "Tipo de Subscrição",
+    ["OnPrem", "Cloud"],
+    horizontal=True,
+)
+
+c1, c2 = st.columns(2)
+with c1:
+    users = st.number_input("Nº total de utilizadores", min_value=1, step=1, format="%d")
+with c2:
+    companies = st.number_input("Nº de empresas", min_value=1, step=1, format="%d")
+
+st.markdown("### Add-ons")
+selected_modules: dict[str, int] = {}
+for category, modules in PRIMAVERA_ADDONS.items():
+    with st.expander(category, expanded=False):
+        for module_name in modules:
+            enabled = st.checkbox(module_name, key=f"mod_{module_name}")
+            if enabled:
+                module_users = st.number_input(
+                    f"Utilizadores do módulo - {module_name}",
+                    min_value=1,
+                    step=1,
+                    format="%d",
+                    key=f"users_{module_name}",
+                )
+                selected_modules[module_name] = module_users
+
+if st.button("Calcular Plano Recomendado"):
+    result = calculate_primavera_plan(
+        subscription_type=subscription_type,
+        users=users,
+        companies=companies,
+        selected_modules=selected_modules,
+    )
+
+    for warning in result["warnings"]:
+        st.warning(warning)
+
+    st.success(f"Plano Primavera Evolution recomendado: {result['plan_name']}")
+    st.markdown(f"**Preço base estimado:** {format_euro(result['base_price'])}")
+
+    st.markdown("### Detalhes")
+    st.markdown(
+        f"- **Plano:** {result['plan_name']}  \\n"
+        f"- **Tipo:** {subscription_type}  \\n"
+        f"- **Utilizadores incluídos:** {result['included_users']}  \\n"
+        f"- **Empresas incluídas:** {result['included_companies']}"
+    )
+
+    if result["selected_modules"]:
+        st.markdown("### Módulos selecionados")
+        for module, module_users in result["selected_modules"].items():
+            st.markdown(f"- {module}: {module_users} utilizador(es)")
+    else:
+        st.info("Nenhum add-on selecionado.")
+
+    if result["blocked_modules"]:
+        st.error("Alguns módulos não estão disponíveis neste tipo/plano:")
+        for module, reason in result["blocked_modules"].items():
+            st.markdown(f"- **{module}**: {reason}")
+
+    st.caption(
+        "Nota: o cálculo acima estima o preço do plano base. Os add-ons do Primavera"
+        " Evolution são por módulo + por utilizador e podem ter preços adicionais."
+    )
+
+st.markdown("---")
+st.markdown("### Tabela de preços base")
+for plan_id in sorted(PRIMAVERA_PLANS):
+    plan = PRIMAVERA_PLANS[plan_id]
+    st.markdown(
+        f"- **{plan['name']}**: {format_euro(plan['price'])} "
+        f"(inclui {plan['included_users']} user(s) e {plan['included_companies']} empresa(s))"
+    )

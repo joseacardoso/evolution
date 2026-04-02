@@ -17,6 +17,7 @@ from primavera_logic import (
 )
 
 PLAN_ORDER = ["Essentials", "Standard", "Plus", "Advanced", "Premium", "Ultimate"]
+from primavera_logic import PRIMAVERA_ADDONS, PRIMAVERA_PLANS, calculate_primavera_plan
 
 
 def render_primavera() -> None:
@@ -82,6 +83,7 @@ def render_primavera() -> None:
         st.markdown(
             f"**Preço estimado ({'anual' if result['billing_period'] == 'annual' else 'mensal'}):** {format_euro(result['total_price'])}"
         )
+        st.markdown(f"**Preço base estimado:** {format_euro(result['base_price'])}")
         st.markdown(
             f"- **Plano:** {result['plan_name']}  \n"
             f"- **Tipo:** {subscription_type}  \n"
@@ -100,6 +102,11 @@ def render_primavera() -> None:
         else:
             st.markdown("- **Core:** (nenhum selecionado)")
         if result["selected_modules"]:
+            f"- **Empresas incluídas:** {result['included_companies']}"
+        )
+
+        if result["selected_modules"]:
+            st.markdown("### Módulos selecionados")
             for module, module_users in result["selected_modules"].items():
                 st.markdown(f"- {module}: {module_users} utilizador(es)")
 
@@ -118,6 +125,10 @@ def render_primavera() -> None:
     for plan_name, plan in catalog["plans"].items():
         st.markdown(
             f"- **{plan_name}**: {format_euro(plan['pvp'])} "
+    for plan_id in sorted(PRIMAVERA_PLANS):
+        plan = PRIMAVERA_PLANS[plan_id]
+        st.markdown(
+            f"- **{plan['name']}**: {format_euro(plan['price'])} "
             f"(inclui {plan['included_users']} user(s) e {plan['included_companies']} empresa(s))"
         )
 
